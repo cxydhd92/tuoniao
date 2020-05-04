@@ -34,10 +34,10 @@ date_format(Type, Date) ->
 
 other_date_format(ODate) ->
     StrTime = ?IF(is_binary(ODate), ?b2l(ODate), ODate),
-    [Date, HTime] = string:tokens(StrTime, " "),
+    [Date, HTime|_] = string:tokens(StrTime, " "),
     [Year, Month, Day] = string:tokens(Date, "-"),
     [Hour, Minu, Sec] = string:tokens(HTime, ":"),
-    NewTime = util:datetime_to_timestamp({{?l2i(Year), ?l2i(Month),?l2i(Day)},{?l2i(Hour), ?l2i(Minu),?l2i(Sec)}}) + 8*3600,
+    NewTime = util:datetime_to_timestamp({{?l2i(Year), ?l2i(Month),?l2i(Day)},{?l2i(Hour), ?l2i(Minu),?l2i(Sec)}}),
     NewTime.
 
 atom_date_format(AtomDate) ->
@@ -47,7 +47,7 @@ atom_date_format(AtomDate) ->
     [HTime, _] = string:tokens(Time, "."),
     [Hour, Minu, SecD] = string:tokens(HTime, ":"),
     [Sec|_] = string:tokens(SecD, "Z"),
-    NewTime = util:datetime_to_timestamp({{?l2i(Year), ?l2i(Month),?l2i(Day)},{?l2i(Hour), ?l2i(Minu),?l2i(Sec)}}) + 8*3600,
+    NewTime = util:datetime_to_timestamp({{?l2i(Year), ?l2i(Month),?l2i(Day)},{?l2i(Hour), ?l2i(Minu),?l2i(Sec)}}),
     NewTime.
 
 rss_date_format(RssDate) ->

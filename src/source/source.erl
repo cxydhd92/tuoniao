@@ -23,7 +23,7 @@
 -record(source, {
 	list = []  %% [{SoureId, IsUser}]
 	,mgr_pid 
-	,today = [] %% 今日爬取标题[{SourceId, [Title,...]}]
+	,titles = [] %% 最新100条爬取标题[{SourceId, [Title,...]}]
 }).
 %%%===================================================================
 %%% API
@@ -119,11 +119,19 @@ handle_init([{MgrPid, SourceId, IsUser}]) ->
 	?INFO("SourceId~w start",[SourceId]),
 	State = #source{list = [{SourceId, IsUser}], mgr_pid = MgrPid},
 	erlang:send_after(10*1000, self(), start_spider),
-	Today = util:today(),
-	Sec = Today+86400 - util:now(),
-	erlang:send_after(Sec*1000*3, self(), zero_up),
-	?INFO("SourceId~w end",[SourceId]),
-	{ok, State}.
+	% Today = util:today(),
+	% Sec = Today+86400 - util:now(),
+	% erlang:send_after(Sec*1000*3, self(), zero_up),
+	#cfg_news_source{class = Class} = cfg_news_source:get(SourceId),
+	News = api_todayhot:get_node_news_num(Class, SourceId, 100),
+	TitleL = [Title||#todayhot_news{title=Title}<-News],
+	gc_timer(),
+	?INFO("SourceId~w titlelen ~w end",[SourceId, length(TitleL)]),
+	{ok, State#source{titles = [{SourceId, TitleL}]}}.
+
+gc_timer() ->
+	erlang:send_after(900*1000, self(), gc_loop_timer),
+	ok.
 
 do_handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -131,17 +139,23 @@ do_handle_call(_Request, _From, State) ->
 do_handle_cast(_Msg, State)->
 	{noreply, State}.
 
-do_handle_info({add_source, SourceId, IsUser}, State=#source{list = List}) ->
+do_handle_info({add_source, SourceId, IsUser}, State=#source{list = List, titles = ATitleL}) ->
 	NList = [{SourceId, IsUser}|lists:keydelete(SourceId, 1, List)],
-	{noreply, State#source{list = NList}};
-do_handle_info(start_spider, State=#source{list = List, today = TodayData}) ->
+	#cfg_news_source{class = Class} = cfg_news_source:get(SourceId),
+	News = api_todayhot:get_node_news_num(Class, SourceId, 100),
+	TitleL = [Title||#todayhot_news{title=Title}<-News],
+	?INFO("SourceId~w titlelen ~w end",[SourceId, length(TitleL)]),
+	{noreply, State#source{list = NList, titles = [{SourceId, TitleL}|lists:keydelete(SourceId, 1, ATitleL)]}};
+do_handle_info(start_spider, State=#source{list = List, titles = TodayData}) ->
 	Now = util:now(),
 	NTodayData = start_spider(List, TodayData, Now),
 	erlang:send_after(?spider_sec*1000, self(), start_spider),
-	{noreply, State#source{today = NTodayData}};
-do_handle_info(zero_up, State=#source{}) ->
-	erlang:send_after(86400*3*1000, self(), zero_up),
-	{noreply, State#source{today=[]}};	
+	{noreply, State#source{titles = NTodayData}};
+do_handle_info(gc_loop_timer, State=#source{}) ->
+	erlang:garbage_collect(),
+	?INFO("gc_loop_timer",[]),
+	gc_timer(),
+	{noreply, State};	
 do_handle_info(_Msg, State) ->
 	{noreply, State}.
 
@@ -153,7 +167,7 @@ start_spider([{SourceId, IsUser}|List], TodayData, Now) ->
 		_ ->
 			start_spider_f1([], SourceId, IsUser, Now)
 	end,
-	NTodayData = [{SourceId, NSubTodayData}|lists:keydelete(SourceId, 1, TodayData)],
+	NTodayData = [{SourceId, lists:sublist(NSubTodayData,100)}|lists:keydelete(SourceId, 1, TodayData)],
 	start_spider(List, NTodayData, Now).
 
 start_spider_f1(TodayData, SourceId, ?false, Now) ->
@@ -184,7 +198,7 @@ new_add_rss(#cfg_news_source{class=Class, source_id=SourceId}, Item, Now) ->
     	_ -> <<"">>
     end,
     Abstract = case catch xmerl_xpath:string("/item/description/text()",Item) of
-    	[#xmlText{value=AbstractValue}] -> AbstractValue;
+    	[#xmlText{value=AbstractValue}] -> ?c2b(AbstractValue);
     	_ -> <<"">>
     end,
     Count = case catch xmerl_xpath:string("/item/viewCount/text()",Item) of
@@ -197,7 +211,7 @@ new_add_rss(#cfg_news_source{class=Class, source_id=SourceId}, Item, Now) ->
     end,
     #todayhot_news{
 		class = Class,
-		node_id = SourceId, title = Title, url=TUrl, news_time=NewTime, source=Source, count=Count
+		node_id = SourceId, title = ?c2b(Title), url=?c2b(TUrl), news_time=NewTime, source=Source, count=Count
 		, abstract = Abstract, time=Now, img = <<"">>
 	}.
 
@@ -206,8 +220,9 @@ do_start_spider_rss(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = 
 		{ok, "200", _ResponseHeaders, Body} ->
 			{XmlDoc, _B} = xmerl_scan:string(Body),
 			Items = xmerl_xpath:string("/rss/channel/item",XmlDoc),  
-			{NNews, NTodayData, NewHotList} =  lists:foldl(fun(Item, {AccNews, AccTop, AccToday})->  
-                                [#xmlText{value=Title}] = xmerl_xpath:string("/item/title/text()",Item), 
+			{NNews, NewHotList, NTodayData} =  lists:foldl(fun(Item, {AccNews, AccTop, AccToday})->  
+                                [#xmlText{value=CTitle}] = xmerl_xpath:string("/item/title/text()",Item), 
+                                Title = ?c2b(CTitle), 
                                 TNews = new_add_rss(Cfg, Item, Now),
                                 case IsTop =:= ?true of
 									true ->
@@ -279,7 +294,7 @@ new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCou
 	{Img, RtItemImgFL} = get_html_item(ItemImgFL),
 	{CountI, RtItemCountFL} = get_html_item(ItemCountFL),
 	NewTime = util:date_format(TimeType, TimeData),
-	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, LinkA]),
+	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(LinkA)]),
 	% Url = ?l2b(?Host ++ "/" ++ Param),
 	Count = parse_count(CountI),
 	TNews = #todayhot_news{
@@ -289,7 +304,7 @@ new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCou
 	},
 	{TNews, RtItemDescL, RtItemAuthorFL, RtItemImgFL, RtItemCountFL, RtItemTimeL}.
 
-do_parse_html(Cfg, TodayData, News, TopL, _Now, [], _, _, _, _, _, _) ->
+do_parse_html(_Cfg, TodayData, News, TopL, _Now, [], _, _, _, _, _, _) ->
 	{News, TodayData, TopL};
 do_parse_html(Cfg=#cfg_news_source{is_top = IsTop}, TodayData, News, TopL, Now, [[Title]|ItemTitleL], [[LinkA]|ItemLinkAL], ItemDescL, ItemAuthorFL, ItemImgFL, ItemCountFL, ItemTimeFL) ->
 	{TNews, RtItemDescL, RtItemAuthorFL, RtItemImgFL, RtItemCountFL, RtItemTimeL} = 
@@ -311,8 +326,17 @@ do_parse_html(Cfg=#cfg_news_source{is_top = IsTop}, TodayData, News, TopL, Now, 
 			end
 	end.
 
+get_send_url(SourceId, Url, Now) ->
+	case SourceId of
+		10001 ->
+			?b2l(Url)++?i2l(Now)++".json";
+		_ ->
+			?b2l(Url)
+	end.
+
 do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, TodayData, Now) ->
-    case ibrowse:send_req(?b2l(Url), [], get) of
+	NUrl = get_send_url(SourceId, Url, Now),
+    case ibrowse:send_req(NUrl, [], get) of
 		{ok, "200", _ResponseHeaders, ResponseBody} ->
 			BodyJsonBin = list_to_binary(ResponseBody),
 			BodyTerm = jsx:decode(BodyJsonBin),
@@ -354,9 +378,20 @@ parse_count(Count) ->
 	case is_integer(Count) of
 		true ->
 			?l2b(?i2l(Count));
+		_ when is_list(Count) ->
+			?l2b(Count);
 		_ ->
 			Count
 	end.
+
+build_link_a(LinkA) when is_integer(LinkA) ->
+	?l2b(?i2l(LinkA));
+build_link_a(LinkA)  ->
+	LinkA.
+
+get_item_data(OldData, Container) when Container =/= <<"">> ->
+	get_data(Container, OldData);
+get_item_data(OldData, _) -> OldData.
 
 new_add_json(Cfg, Data) ->
 	#cfg_news_source{class = Class, source_id=SourceId, link_pre=LinkPre, title=TitleF, link_a=LinkA, desc=DescF, author=AuthorF, 
@@ -365,7 +400,7 @@ new_add_json(Cfg, Data) ->
 	Now = util:now(),
 	NewTime = ?IF(TimeData=:=undefined, Now, util:date_format(TimeType, TimeData)),
 	Title = proplists:get_value(TitleF, Data),
-	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, proplists:get_value(LinkA, Data)]),
+	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(proplists:get_value(LinkA, Data))]),
 	% Url = ?l2b(?Host ++ "/" ++ Param),
 	Abstract = proplists:get_value(DescF, Data, <<"">>),
 	Source = proplists:get_value(AuthorF, Data, <<"">>),
@@ -380,8 +415,9 @@ new_add_json(Cfg, Data) ->
 
 do_parse_data(_, [], News, _, NTodayData, TopL) ->
 	{News, NTodayData, TopL};
-do_parse_data(Cfg, [Data|T], News, Now, TodayData, TopL) ->
-	#cfg_news_source{title=TitleF, is_top=IsTop} = Cfg,
+do_parse_data(Cfg, [OldData|T], News, Now, TodayData, TopL) ->
+	#cfg_news_source{title=TitleF, is_top=IsTop, container = Container} = Cfg,
+	Data = get_item_data(OldData, Container), 
 	Title = proplists:get_value(TitleF, Data),
 	case IsTop =:= ?true of
 		true ->

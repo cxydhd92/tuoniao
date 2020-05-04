@@ -17,20 +17,20 @@ get(10001) ->
 		sub_class = 1,
 		name = <<"好奇心日报"/utf8>>,
 		icon_name = <<"qdaily"/utf8>>,
-		url = <<""/utf8>>,
-		type = 0,
-		is_top = 0,
-		link_pre = <<""/utf8>>,
-		data = <<""/utf8>>,
-		container = <<""/utf8>>,
-		title = <<""/utf8>>,
-		link_a = <<""/utf8>>,
-		desc = <<""/utf8>>,
+		url = <<"http://www.qdaily.com/tags/tagmore/29/"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<"http://www.qdaily.com/articles/"/utf8>>,
+		data = <<"data|feeds"/utf8>>,
+		container = <<"post"/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"id"/utf8>>,
+		desc = <<"description"/utf8>>,
 		author = <<""/utf8>>,
-		img = <<""/utf8>>,
+		img = <<"image"/utf8>>,
 		count = <<""/utf8>>,
-		time = <<""/utf8>>,
-		time_type = 0
+		time = <<"publish_time"/utf8>>,
+		time_type = 2
 	};
 
 get(10002) ->
@@ -38,16 +38,16 @@ get(10002) ->
 		source_id = 10002,
 		class = 1,
 		sub_class = 2,
-		name = <<"澎湃新闻.热闻"/utf8>>,
+		name = <<"澎湃.今日热闻"/utf8>>,
 		icon_name = <<"thepaper"/utf8>>,
-		url = <<""/utf8>>,
-		type = 0,
-		is_top = 0,
-		link_pre = <<""/utf8>>,
-		data = <<""/utf8>>,
-		container = <<""/utf8>>,
-		title = <<""/utf8>>,
-		link_a = <<""/utf8>>,
+		url = <<"https://www.thepaper.cn/"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://www.thepaper.cn/"/utf8>>,
+		data = <<"<ul.+?class=\"list_hot\".+?id=\"listhot0\">([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<"<li[^>]+?>([\\s\\S]+?)</li>"/utf8>>,
+		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
 		desc = <<""/utf8>>,
 		author = <<""/utf8>>,
 		img = <<""/utf8>>,
@@ -375,7 +375,8 @@ list_key() ->
 		60001,
 		60002,
 		110001
-	].news_source_class(1) ->
+	].
+news_source_class(1) ->
 	[10001,10002,10003,10004];
 
 news_source_class(2) ->

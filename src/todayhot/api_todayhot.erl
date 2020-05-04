@@ -38,18 +38,21 @@ get_node(Class, NodeId) ->
 	end.
 
 get_node_news_num(Class, NodeId, Num) ->
-	case api_todayhot:get_node(Class, NodeId) of
-		#todayhot_nodes{news = News} when Num > 0 ->
-			get_end_num_news(News, Num, []);
+	case api_todayhot:get_today_node(Class, NodeId) of
+		#todayhot_nodes{news = News} when Num > 0  ->
+			TNum = length(News),
+			case TNum >= Num of
+				true ->
+					lists:sublist(News, Num);
+				_ ->
+					SNum = Num - TNum,
+					#todayhot_nodes{news = ONews} = get_other_node(Class, NodeId),
+					lists:sublist(News, TNum) ++ lists:sublist(ONews, SNum)
+			end;
 		#todayhot_nodes{news = News} ->
 			News;
 		_ -> []
     end.
-get_end_num_news([], _E, ENewsL) ->ENewsL;
-get_end_num_news([TN|NewsL], Num, ENewsL) when Num > 0 ->
-	get_end_num_news(NewsL, Num-1, [TN|ENewsL]);
-get_end_num_news(_, _Num, ENewsL) ->
-	ENewsL.
 
 get_node_news(Class, NodeId) ->
 	EndTime = util:today() - ?LIST_END_TIME,
@@ -102,7 +105,7 @@ up_today_to_other() ->
 	Fun = fun(TN=#todayhot_nodes{class_node={Class, NodeId}, news=TodayNewsL}) ->
 		case get_other_node(Class, NodeId) of
 			#todayhot_nodes{news=NewsL} ->
-				NTN = TN#todayhot_nodes{news = lists:reverse(lists:keysort(#todayhot_news.time, NewsL++TodayNewsL))},
+				NTN = TN#todayhot_nodes{news = lists:reverse(lists:keysort(#todayhot_news.id, NewsL++TodayNewsL))},
 				insert_today(TN#todayhot_nodes{news=[]}),
 				insert_other(NTN);
 			_ ->

@@ -13,6 +13,7 @@
 -define(l2b(L), list_to_binary(L)).
 -define(l2i(L), list_to_integer(L)).
 -define(i2l(L), integer_to_list(L)).
+-define(c2b(L), unicode:characters_to_binary(L)).
 
 -define(IF(Arg, Val1, Val2), case Arg of true -> Val1; _ -> Val2 end).
 

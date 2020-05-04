@@ -4,14 +4,36 @@
 -module(test).
 -include("common.hrl").
 -include("todayhot.hrl").
+-include("cfg_news_source.hrl").
 -include_lib("xmerl/include/xmerl.hrl").  
 -compile(export_all).
 
-test() ->
-	case ibrowse:send_req("https://s.weibo.com/top/summary?cate=realtimehot", [], get) of
+test_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, TodayData, Now) ->
+	case ibrowse:send_req(?b2l(Url), [], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
-			{_, Container} = re:run(Body, <<"<tbody>([\\s\\S]+?)</tbody>">>, [{capture, all_but_first, binary}, global]),
-			{_, Item} = re:run(Container, <<"<tr.+?class=\"\">\\s+?<td.+?class=\"td-\\d+.+?ranktop\">([\\s\\S]+?)</tr>">>, [{capture, all_but_first, binary}, global]),
+			#cfg_news_source{data=Data, container=ContainerF, title=TitleF, link_a=LinkA,
+			desc=DescF, author=AuthorF, img=ImgF, count=CountF, time=TimeF} = Cfg,
+			{_, Container} = re:run(Body, Data, [{capture, all_but_first, binary}, global]),
+			{_, Item} = re:run(Container, ContainerF, [{capture, all_but_first, binary}, global]),
+			{_, ItemTitleL} = re:run(Item, TitleF, [{capture, all_but_first, binary}, global]),
+			{_, ItemLinkAL} = re:run(Item, LinkA, [{capture, all_but_first, binary}, global]),
+			?INFO("ItemTitleL~w",[ItemTitleL]);
+			% {NNews, NTodayData, NewHotList} = do_parse_html(Cfg, TodayData, [], [], Now, ItemTitleL, ItemLinkAL, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCountFL, ItemTimeFL),
+			% ?IF(length(NNews)>0, mgr_todayhot:send({up_news, Class, SourceId, NNews, Now}), ignored),
+			% ?IF(NewHotList=/=[], api_todayhot:insert_new_hot(Class, SourceId, lists:reverse(NewHotList)), ignored),
+			% ?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
+			% NTodayData;
+		_Err ->
+			?ERR("Url ~ts fail ~w", [Url, _Err]),
+			ok
+    end.
+
+test() ->
+	case ibrowse:send_req("https://s.weibo.com", [], get) of
+		{ok, "200", _ResponseHeaders, Body} ->
+			?INFO("xBoday~w",[Body]),
+			{_, Container} = re:run(Body, <<"<tbody>([\\s\\S]+?)</tbody>"/utf8>>, [{capture, all_but_first, binary}, global]),
+			{_, Item} = re:run(Container, <<"<li[^>]+?>\\s+?<span[^>]+?>([\\s\\S]+?)</li>">>, [{capture, all_but_first, binary}, global]),
 			{_, [ItemTitle|_]} = re:run(Item, <<"<a[^>]+?>([\\s\\S]+?)</a>">>, [{capture, all_but_first, binary}, global]),
 			{_, [[ItemUrl]|_]} = re:run(Item, <<"href=\"([^\"]+?)\"">>, [{capture, all_but_first, binary}, global]),
 			
