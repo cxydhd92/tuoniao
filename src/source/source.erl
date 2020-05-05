@@ -223,7 +223,7 @@ new_add_rss(#cfg_news_source{class=Class, source_id=SourceId}, Item, Now) ->
 	}.
 
 do_start_spider_rss(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, is_top = IsTop}, TodayData, Now) ->
-	case ibrowse:send_req(?b2l(Url), [], get) of
+	case ibrowse:send_req(?b2l(Url), [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
 			{XmlDoc, _B} = xmerl_scan:string(Body),
 			Items = xmerl_xpath:string("/rss/channel/item",XmlDoc),  
@@ -258,7 +258,7 @@ do_start_spider_rss(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = 
     end.
 
 do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, TodayData, Now) ->
-	case ibrowse:send_req(?b2l(Url), [], get) of
+	case ibrowse:send_req(?b2l(Url), [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
 			#cfg_news_source{data=Data, container=ContainerF, title=TitleF, link_a=LinkA,
 			desc=DescF, author=AuthorF, img=ImgF, count=CountF, time=TimeF} = Cfg,
@@ -343,7 +343,7 @@ get_send_url(SourceId, Url, Now) ->
 
 do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, TodayData, Now) ->
 	NUrl = get_send_url(SourceId, Url, Now),
-    case ibrowse:send_req(NUrl, [], get) of
+    case ibrowse:send_req(NUrl, [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, ResponseBody} ->
 			BodyJsonBin = list_to_binary(ResponseBody),
 			BodyTerm = jsx:decode(BodyJsonBin),

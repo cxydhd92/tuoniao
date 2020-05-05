@@ -9,12 +9,12 @@
 -compile(export_all).
 
 test_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, TodayData, Now) ->
-	case ibrowse:send_req("https://www.huxiu.com/", [], get) of
+	case ibrowse:send_req(?b2l(Url), [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
-			?INFO("Body~ts length()~w",[Body, length(Body)]),
 			#cfg_news_source{data=Data, container=ContainerF, title=TitleF, link_a=LinkA,
 			desc=DescF, author=AuthorF, img=ImgF, count=CountF, time=TimeF} = Cfg,
-			{_, Container} = ?IF(Data=:=<<"">>, {ok, Body}, re:run(Body, "{\"route\":((.|\n)*?)\"}}}", [{capture, first, list}, global, unicode])),
+			{_, Container} = ?IF(Data=:=<<"">>, {ok, Body}, re:run(Body, Data, [{capture, all_but_first, binary}, global])),
+			?INFO("xxxxxx~ts",[Container]),
 			{_, Item} = ?IF(ContainerF=:=<<"">>, {ok, Container}, re:run(Container, ContainerF, [{capture, all_but_first, binary}, global])),
 			{_, ItemTitleL} = re:run(Item, TitleF, [{capture, all_but_first, binary}, global]),
 			{_, ItemLinkAL} = re:run(Item, LinkA, [{capture, all_but_first, binary}, global]),
