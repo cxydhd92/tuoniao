@@ -13,7 +13,7 @@
 %% ------------------------------------------------------------------
 %% API Function Exports
 %% ------------------------------------------------------------------
--define(source_node_num, 100). %% 每100个源一个节点
+-define(source_node_num, 50). %% 每100个源一个节点
 -record(mgr_source, {
 	list = []        %% 系统源列表[{SPid, [SourceId]}]
 	,user_list = []  %% 用户自定义源列表[{SPid, [SourceId]}]

@@ -6,7 +6,7 @@
 -module(source).
 -behaviour(gen_server).
 
--define(spider_sec, 10*60).
+-define(spider_sec, 600).
 -include("common.hrl").
 -include("todayhot.hrl").
 -include("cfg_news_class.hrl").
@@ -125,13 +125,13 @@ handle_init([{MgrPid, SourceId, IsUser}]) ->
 	#cfg_news_source{class = Class} = cfg_news_source:get(SourceId),
 	News = api_todayhot:get_node_news_num(Class, SourceId, 100),
 	TitleL = [Title||#todayhot_news{title=Title}<-News],
-	gc_timer(),
+	% gc_timer(),
 	?INFO("SourceId~w titlelen ~w end",[SourceId, length(TitleL)]),
 	{ok, State#source{titles = [{SourceId, TitleL}]}}.
 
-gc_timer() ->
-	erlang:send_after(900*1000, self(), gc_loop_timer),
-	ok.
+% gc_timer() ->
+% 	erlang:send_after(900*1000, self(), gc_loop_timer),
+% 	ok.
 
 do_handle_call(_Request, _From, State) ->
     {reply, ok, State}.
@@ -150,11 +150,12 @@ do_handle_info(start_spider, State=#source{list = List, titles = TodayData}) ->
 	Now = util:now(),
 	NTodayData = start_spider(List, TodayData, Now),
 	erlang:send_after(?spider_sec*1000, self(), start_spider),
+	self() ! gc_loop_timer,
 	{noreply, State#source{titles = NTodayData}};
 do_handle_info(gc_loop_timer, State=#source{}) ->
 	erlang:garbage_collect(),
 	?INFO("gc_loop_timer",[]),
-	gc_timer(),
+	% gc_timer(),
 	{noreply, State};	
 do_handle_info(_Msg, State) ->
 	{noreply, State}.
@@ -173,7 +174,13 @@ start_spider([{SourceId, IsUser}|List], TodayData, Now) ->
 start_spider_f1(TodayData, SourceId, ?false, Now) ->
 	case cfg_news_source:get(SourceId) of
 		Cfg = #cfg_news_source{type = Type, url = Url} when Type > 0 andalso Url =/= <<"">> ->
-			do_start_spider(Cfg, TodayData, Now);
+			case catch do_start_spider(Cfg, TodayData, Now) of
+				NTodayData when is_list(NTodayData) ->
+					NTodayData;
+		        _Err ->
+		            ?ERR("SourceId: ~w, reason: ~w stacktrace: ~w", [SourceId, _Err, erlang:get_stacktrace()]),
+		            TodayData
+		    end;
 		_ ->
 			TodayData
 	end;
@@ -194,13 +201,13 @@ new_add_rss(#cfg_news_source{class=Class, source_id=SourceId}, Item, Now) ->
 	[#xmlText{value=TUrl}] = xmerl_xpath:string("/item/link/text()",Item),  
     [#xmlText{value=Title}] = xmerl_xpath:string("/item/title/text()",Item),  
     Source = case catch xmerl_xpath:string("/item/author/text()",Item) of
-    	[#xmlText{value=AuthorValue}] -> AuthorValue;
+    	[#xmlText{value=AuthorValue}] -> ?c2b(AuthorValue);
     	_ -> <<"">>
     end,
-    Abstract = case catch xmerl_xpath:string("/item/description/text()",Item) of
-    	[#xmlText{value=AbstractValue}] -> ?c2b(AbstractValue);
-    	_ -> <<"">>
-    end,
+    % Abstract = case catch xmerl_xpath:string("/item/description/text()",Item) of
+    % 	[#xmlText{value=AbstractValue}] -> ?c2b(AbstractValue);
+    % 	_ -> <<"">>
+    % end,
     Count = case catch xmerl_xpath:string("/item/viewCount/text()",Item) of
     	[#xmlText{value=ViewCount}] -> parse_count(ViewCount);
     	_ -> <<"0">>
@@ -212,7 +219,7 @@ new_add_rss(#cfg_news_source{class=Class, source_id=SourceId}, Item, Now) ->
     #todayhot_news{
 		class = Class,
 		node_id = SourceId, title = ?c2b(Title), url=?c2b(TUrl), news_time=NewTime, source=Source, count=Count
-		, abstract = Abstract, time=Now, img = <<"">>
+		, abstract = <<"">>, time=Now, img = <<"">>
 	}.
 
 do_start_spider_rss(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, is_top = IsTop}, TodayData, Now) ->
@@ -255,8 +262,8 @@ do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 		{ok, "200", _ResponseHeaders, Body} ->
 			#cfg_news_source{data=Data, container=ContainerF, title=TitleF, link_a=LinkA,
 			desc=DescF, author=AuthorF, img=ImgF, count=CountF, time=TimeF} = Cfg,
-			{_, Container} = re:run(Body, Data, [{capture, all_but_first, binary}, global]),
-			{_, Item} = re:run(Container, ContainerF, [{capture, all_but_first, binary}, global]),
+			{_, Container} = ?IF(Data=:=<<"">>, {ok, Body}, re:run(Body, Data, [{capture, all_but_first, binary}, global])),
+			{_, Item} = ?IF(ContainerF=:=<<"">>, {ok, Container}, re:run(Container, ContainerF, [{capture, all_but_first, binary}, global])),
 			{_, ItemTitleL} = re:run(Item, TitleF, [{capture, all_but_first, binary}, global]),
 			{_, ItemLinkAL} = re:run(Item, LinkA, [{capture, all_but_first, binary}, global]),
 			ItemDescL = get_html_data(DescF, Item),
@@ -351,23 +358,33 @@ do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 	end.
 
     
-get_data(Data, Body) ->
+get_data(Data, Body, Default) ->
 	DataStr = ?b2l(Data),
 	DataL = string:tokens(DataStr, "|"),
-	get_data_f1(DataL, Body).
+	get_data_f1(DataL, Body, Default).
 
-get_data_f1([], Datas) -> Datas;
-get_data_f1([Data|L], Body) ->
+get_data_f1([], Datas, _) -> Datas;
+get_data_f1([Data|L], Body, Default) ->
 	case proplists:get_value(?l2b(Data), Body) of
 		DataS when DataS =/= undefined ->
-			get_data_f1(L, DataS);
+			NDataS = case is_list(DataS) of
+				true -> DataS;
+				_ ->
+					case catch jsx:decode(DataS) of
+						JDataS when is_list(JDataS) ->
+							JDataS;
+						_ ->
+							DataS
+					end
+			end,
+			get_data_f1(L, NDataS, Default);
 		_ ->
-			[]
+			Default
 	end.
 
 parse_body(Cfg, Body, Now, TodayData) ->
 	#cfg_news_source{data=Data} = Cfg,
-	case get_data(Data, Body) of
+	case get_data(Data, Body, []) of
 		NewData when is_list(NewData) ->
 			do_parse_data(Cfg, NewData, [], Now, TodayData, []);
 		_ ->
@@ -390,7 +407,7 @@ build_link_a(LinkA)  ->
 	LinkA.
 
 get_item_data(OldData, Container) when Container =/= <<"">> ->
-	get_data(Container, OldData);
+	get_data(Container, OldData, []);
 get_item_data(OldData, _) -> OldData.
 
 new_add_json(Cfg, Data) ->
@@ -403,7 +420,7 @@ new_add_json(Cfg, Data) ->
 	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(proplists:get_value(LinkA, Data))]),
 	% Url = ?l2b(?Host ++ "/" ++ Param),
 	Abstract = proplists:get_value(DescF, Data, <<"">>),
-	Source = proplists:get_value(AuthorF, Data, <<"">>),
+	Source = get_data(AuthorF, Data, <<"">>),
 	Img = proplists:get_value(ImgF, Data, <<"">>),
 	Count = parse_count(proplists:get_value(CountF, Data, <<"0">>)),
 	TNews = #todayhot_news{
