@@ -10,7 +10,7 @@ get(1) ->
 	#cfg_news_class{
 		id = 1,
 		sort = 1,
-		name = <<"综合"/utf8>>
+		name = <<"时事.新闻"/utf8>>
 	};
 
 get(2) ->
@@ -66,7 +66,7 @@ get(9) ->
 	#cfg_news_class{
 		id = 9,
 		sort = 9,
-		name = <<"影音"/utf8>>
+		name = <<"影音小说"/utf8>>
 	};
 
 get(10) ->

@@ -13,6 +13,7 @@ test_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, Toda
 		{ok, "200", _ResponseHeaders, Body} ->
 			#cfg_news_source{data=Data, container=ContainerF, title=TitleF, link_a=LinkA,
 			desc=DescF, author=AuthorF, img=ImgF, count=CountF, time=TimeF} = Cfg,
+			?INFO("xxxxxxBody~w",[length(Body)]),
 			{_, Container} = ?IF(Data=:=<<"">>, {ok, Body}, re:run(Body, Data, [{capture, all_but_first, binary}, global])),
 			?INFO("xxxxxx~ts",[Container]),
 			{_, Item} = ?IF(ContainerF=:=<<"">>, {ok, Container}, re:run(Container, ContainerF, [{capture, all_but_first, binary}, global])),

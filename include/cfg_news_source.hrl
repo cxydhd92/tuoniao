@@ -17,7 +17,8 @@
 	'img',
 	'count',
 	'time',
-	'time_type'
+	'time_type',
+	'json_data'
 }).
 
 

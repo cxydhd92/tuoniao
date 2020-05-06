@@ -194,6 +194,8 @@ do_start_spider(Cfg=#cfg_news_source{type = 2}, TodayData, Now) ->
 	do_start_spider_html(Cfg, TodayData, Now);
 do_start_spider(Cfg=#cfg_news_source{type = 3}, TodayData, Now) ->
 	do_start_spider_rss(Cfg, TodayData, Now);
+do_start_spider(Cfg=#cfg_news_source{type = 4}, TodayData, Now) ->
+	do_start_spider_html_json(Cfg, TodayData, Now);
 do_start_spider(_Cfg, TodayData, _Now) ->
 	TodayData.
 
@@ -209,7 +211,7 @@ new_add_rss(#cfg_news_source{class=Class, source_id=SourceId}, Item, Now) ->
     % 	_ -> <<"">>
     % end,
     Count = case catch xmerl_xpath:string("/item/viewCount/text()",Item) of
-    	[#xmlText{value=ViewCount}] -> parse_count(ViewCount);
+    	[#xmlText{value=ViewCount}] -> parse_count(SourceId, ViewCount);
     	_ -> <<"0">>
     end,
     NewTime = case catch xmerl_xpath:string("/item/pubDate/text()",Item) of
@@ -282,6 +284,26 @@ do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 			TodayData
     end.
 
+do_start_spider_html_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, json_data=DataF}, TodayData, Now) ->
+	case ibrowse:send_req(?b2l(Url), [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+		{ok, "200", _ResponseHeaders, Body} ->
+			case catch re:run(Body, DataF, [{capture, first, list}, global, unicode]) of
+		        {_, RetJsonStr} ->
+		        	BodyJsonBin = list_to_binary(RetJsonStr),
+					BodyTerm = jsx:decode(BodyJsonBin),
+					{NNews, NTodayData, NewHotList} = parse_body(Cfg, BodyTerm, Now, TodayData),
+					?IF(length(NNews)>0, mgr_todayhot:send({up_news, Class, SourceId, NNews, Now}), ignored),
+					?IF(NewHotList=/=[], api_todayhot:insert_new_hot(Class, SourceId, lists:reverse(NewHotList)), ignored),
+					?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
+					NTodayData;
+		        _ ->
+		            {[], Now}
+		    end;
+		_Err ->
+			?ERR("Url ~ts fail ~w", [Url, _Err]),
+			TodayData
+    end.
+
 get_html_data(DataFormat, Data) ->
 	case DataFormat=:=<<"">> of
 		true -> [];
@@ -303,7 +325,7 @@ new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCou
 	NewTime = util:date_format(TimeType, TimeData),
 	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(LinkA)]),
 	% Url = ?l2b(?Host ++ "/" ++ Param),
-	Count = parse_count(CountI),
+	Count = parse_count(SourceId, CountI),
 	TNews = #todayhot_news{
 		class = Class,
 		node_id = SourceId, title = Title, url=TUrl, news_time=NewTime, source=Source, count=Count
@@ -357,7 +379,7 @@ do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 			TodayData
 	end.
 
-    
+get_data(<<"">>, Body, Default) -> Default;
 get_data(Data, Body, Default) ->
 	DataStr = ?b2l(Data),
 	DataL = string:tokens(DataStr, "|"),
@@ -391,7 +413,11 @@ parse_body(Cfg, Body, Now, TodayData) ->
 			{[], TodayData, []}
 	end.
 	
-parse_count(Count) ->
+parse_count(60001, Count) ->
+	LC = ?b2l(Count),
+	[SCount|_] = string:tokens(LC, " "),
+	?l2b(?i2l(?l2i(SCount)*10000));
+parse_count(_, Count) ->
 	case is_integer(Count) of
 		true ->
 			?l2b(?i2l(Count));
@@ -416,13 +442,13 @@ new_add_json(Cfg, Data) ->
 	TimeData = proplists:get_value(Time, Data),
 	Now = util:now(),
 	NewTime = ?IF(TimeData=:=undefined, Now, util:date_format(TimeType, TimeData)),
-	Title = proplists:get_value(TitleF, Data),
-	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(proplists:get_value(LinkA, Data))]),
+	Title = get_data(TitleF, Data, <<"">>),
+	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(get_data(LinkA, Data, <<"">>))]),
 	% Url = ?l2b(?Host ++ "/" ++ Param),
-	Abstract = proplists:get_value(DescF, Data, <<"">>),
+	Abstract = get_data(DescF, Data, <<"">>),
 	Source = get_data(AuthorF, Data, <<"">>),
-	Img = proplists:get_value(ImgF, Data, <<"">>),
-	Count = parse_count(proplists:get_value(CountF, Data, <<"0">>)),
+	Img = get_data(ImgF, Data, <<"">>),
+	Count = parse_count(SourceId, get_data(CountF, Data, <<"0">>)),
 	TNews = #todayhot_news{
 		class = Class,
 		node_id = SourceId, title = Title, url=TUrl, news_time=NewTime, source=Source, count=Count
@@ -435,7 +461,7 @@ do_parse_data(_, [], News, _, NTodayData, TopL) ->
 do_parse_data(Cfg, [OldData|T], News, Now, TodayData, TopL) ->
 	#cfg_news_source{title=TitleF, is_top=IsTop, container = Container} = Cfg,
 	Data = get_item_data(OldData, Container), 
-	Title = proplists:get_value(TitleF, Data),
+	Title = get_data(TitleF, Data, <<"">>),
 	case IsTop =:= ?true of
 		true ->
 			TNews = new_add_json(Cfg, Data),

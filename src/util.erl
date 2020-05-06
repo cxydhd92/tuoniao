@@ -25,6 +25,7 @@ time_zone(Zone) ->
 
 date_format(Type, Date) ->
     case Type of
+        1 when is_binary(Date) -> ?l2i(?b2l(Date));
         1 -> Date;
         2 -> other_date_format(Date);
         3 -> atom_date_format(Date);
