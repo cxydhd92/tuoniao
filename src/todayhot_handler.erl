@@ -22,7 +22,7 @@ echo(<<"GET">>, undefined, Req) ->
 echo(<<"GET">>, Echo, Req) ->
 	Node = ets:lookup(todayhot_ets, {2,?l2i(?b2l(Echo))}),
 	NNewsL = case Node of
-		[#todayhot_nodes{news=NewL}] ->
+		[#todayhot_node_news{news=NewL}] ->
 			Fun  = fun(#todayhot_news{id=Id, abstract=Abs, sub_news=SubNews}, Acc) ->
 				Fun1=fun(#todayhot_sub_news{title=Title,url=Url}, Acc1) ->
 					[[{title, Title}, {url,Url}]|Acc1]

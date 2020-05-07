@@ -6,16 +6,16 @@
 -export([load/0, load_sys_id/0, up_news_db/2, up_db_nodes/1]).
 
 load() ->
-    Sql = <<"select node_id, count, add_time, up_time, users from todayhot_node ">>,
+    Sql = <<"select node_id, count, add_time, users from todayhot_node ">>,
     {ok, _, Data}  = mysql_poolboy:query(?POOL, Sql),
     Now = util:now(),
     LimitTime = Now - 90*86400,
     Sql1 = <<"select id, node_id, class, abstract, title, url, source, count, sub_news, same_id, img, news_time, time from todayhot_news where time>=?">>,
     {ok, _, Data1}  = mysql_poolboy:query(?POOL, Sql1, [LimitTime]),
     Today = util:today(),
-    Fun = fun([NodeId, Count, Time, UpTime, Users], Acc) ->
+    Fun = fun([NodeId, Count, Time, Users], Acc) ->
         NUsers = util:bitstring_to_term(Users),
-        [#todayhot_nodes{node_id = NodeId, count = Count,  users=NUsers, add_time = Time, up_time=UpTime}|Acc]
+        [#todayhot_nodes{node_id = NodeId, count = Count,  users=NUsers, add_time = Time}|Acc]
     end,
     Nodes = lists:foldl(Fun, [], Data),
     Fun1 = fun([Id, NodeId, Class, Abstract, Title, Url, Source, Count, SubNews, SameId, Img, NewsTime, CTime], {Acc1, AccToday}) ->
@@ -34,13 +34,13 @@ load() ->
     {Nodes, OL, TL}.
 
 add_news(Acc, Today, [Id, NodeId, Class, Abstract, Title, Url, Source, Count, SubNews, SameId, NewsTime, CTime, Img]) ->
-    case lists:keytake({NodeId, Today}, #todayhot_node_news.class_node, Acc) of
+    case lists:keytake({NodeId, Today}, #todayhot_node_news.node, Acc) of
             {value, TN=#todayhot_node_news{news = NewsL}, RtAcc1} ->
-                News = #todayhot_news{id = Id, node_id = NodeId, same_id=SameId, abstract = Abstract, 
+                News = #todayhot_news{id = Id, node_id = NodeId, class = Class, same_id=SameId, abstract = Abstract, 
                 title = Title, url=Url, count=Count, source=Source, news_time=NewsTime, sub_news=SubNews, time=CTime, img=Img},
                 [TN#todayhot_node_news{news = [News|NewsL]}|RtAcc1];
             _ ->
-                News = #todayhot_news{id = Id, node_id = NodeId, same_id=SameId, abstract = Abstract, 
+                News = #todayhot_news{id = Id, node_id = NodeId, class = Class, same_id=SameId, abstract = Abstract, 
                 title = Title, url=Url, count=Count, source=Source, news_time=NewsTime, sub_news=SubNews, time=CTime, img=Img},
                 [#todayhot_node_news{node={NodeId, Today}, news = [News]}|Acc]
     end.
@@ -94,7 +94,7 @@ up_db_nodes(NNodesL) ->
     NewNodeL = lists:foldl(Fun, [], NNodesL),
     Len = length(NNodesL),
     SqlSub = "REPLACE INTO todayhot_node(node_id, count, add_time, users) VALUES ",
-    Sql = list_to_binary(lists:concat([SqlSub, lists:duplicate(Len-1, "(?,?,?,?),"), "(?,?,?, ?)"])),
+    Sql = list_to_binary(lists:concat([SqlSub, lists:duplicate(Len-1, "(?,?,?,?),"), "(?,?,?,?)"])),
     ok = mysql_poolboy:query(?POOL, Sql, NewNodeL),
     ok.
 

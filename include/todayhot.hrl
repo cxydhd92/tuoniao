@@ -72,6 +72,7 @@
 ]).
 
 -define(ETS_TODAYHOT, todayhot_ets).
+-define(ETS_TODAYHOT_NEWS, todayhot_news_ets). %%资讯数据
 -define(ETS_TODAYHOT_TODAY, todayhot_today_ets). %%当天数据
 -define(ETS_TODAYHOT_HOTLIST, todayhot_hot_list_ets). %%当天最新榜单数据
 
@@ -86,7 +87,7 @@
 
 
 -record(todayhot_nodes, {
-    ,node_id = 0 
+    node_id = 0 
     ,node_name    %% 节点名
     ,count = 0    %% 订阅数
     ,add_time = 0    

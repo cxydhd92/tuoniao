@@ -26,10 +26,10 @@ handle(Param, Req) ->
 			cowboy_req:reply(405, Req)
 	end.
 
-get_page_news(ClassId, NodeId) ->
-	Node = ets:lookup(?ETS_TODAYHOT_HOTLIST, {ClassId, NodeId}),
+get_page_news(NodeId, Today) ->
+	Node = ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}),
 	NNewsL = case Node of
-		[#todayhot_nodes{news= NewsL}] ->	NewsL;
+		[#todayhot_node_news{news= NewsL}] ->	NewsL;
 		_ -> []
 	end,
 	lists:reverse(NNewsL).
@@ -39,10 +39,11 @@ do_handle([], Req) ->
 do_handle(PostVals, Req) ->
 	ClassId = ?l2i(?b2l(proplists:get_value(<<"classId">>, PostVals, <<"1">>))),
 	NodeId = ?l2i(?b2l(proplists:get_value(<<"nodeId">>, PostVals, <<"0">>))),
+	Today = util:today(),
 	?INFO("ClassId ~w NodeId ~w ",[ClassId, NodeId]),
 	case is_integer(ClassId) andalso is_integer(NodeId) of
 		true when ClassId > 0 andalso NodeId > 0 ->
-			PageNewsL = get_page_news(ClassId, NodeId),
+			PageNewsL = get_page_news(NodeId, Today),
 			Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, sub_news=[#todayhot_sub_news{title=Title,url=Url, source=Source}|_]}, Acc) ->
 				{NodeName, _} = api_todayhot:get_node_name(NodeId),
 				[[{id, Id},{node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]

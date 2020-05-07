@@ -120,7 +120,7 @@ do_handle_info(up_db, State=#mgr_todayhot{changes = Changes, aid=AId, up_nodes=U
 	dao_todayhot:up_db_nodes(UpNodes),
 	erlang:send_after(?db_sec*1000, self(), up_db),
 	{noreply, State#mgr_todayhot{changes=[], up_nodes=[]}};
-do_handle_info({up_news, Class, NodeId, AddNews, Time}, State=#mgr_todayhot{changes = Changes, aid = AId, up_nodes=UpNodes}) ->
+do_handle_info({up_news, Class, NodeId, AddNews, Time}, State=#mgr_todayhot{changes = Changes, aid = AId}) ->
 		?INFO("up_news len ~w Class~w NodeId~w aid~w", [length(AddNews), Class, NodeId, AId]),
 	NodeIdL = lists:delete(NodeId, cfg_news_source:news_source_class(Class)),
 	Today = util:today(),
@@ -150,7 +150,7 @@ add_news(NewsL, Today, NodeIdL, AddNews, AId,Changes) ->
 		{NNewsL, NAId, NAddNews}.
 
 %% 简单的匹配标题相似度
-is_same_title(News,Today, _, []) -> {News, false};
+is_same_title(News, _, []) -> {News, false};
 is_same_title(News, Today, [NodeId|T]) ->
 	case api_todayhot:get_today_node(NodeId, Today) of
 		Node = #todayhot_node_news{news = NewsL} ->
@@ -162,7 +162,7 @@ is_same_title(News, Today, [NodeId|T]) ->
 					{News#todayhot_news{same_id=AId}, TN}
 			end;
 		_ ->
-			is_same_title(News, Class, T)
+			is_same_title(News, Today, T)
 	end.	
 is_same_title(_News, []) -> false;
 is_same_title(News=#todayhot_news{title=Title, id=Id}, [TN=#todayhot_news{id=AId, same_id = 0, title=CTitle, sub_news=SIds}|NewsL]) ->

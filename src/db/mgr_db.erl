@@ -112,7 +112,6 @@ create_todayhot_node() ->
         `count` INT(11) NOT NULL  COMMENT '订阅数',
         `users` text NOT NULL  COMMENT '自定义源用户列表',
         `add_time` INT(11)  NOT NULL COMMENT '时间',
-        `up_time` INT(11)  NOT NULL COMMENT '最近更新时间',
         PRIMARY KEY ( `node_id` )
         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"/utf8
     >>,

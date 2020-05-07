@@ -46,7 +46,7 @@ get_page_news(MinId, ClassId, PageSize, EtsName) ->
 	Fun = fun(NodeId, Acc) ->
 		Node = ets:lookup(EtsName, {ClassId, NodeId}),
 		case Node of
-			[#todayhot_nodes{news= NewsL}] ->	Acc ++ NewsL;
+			[#todayhot_node_news{news= NewsL}] ->	Acc ++ NewsL;
 			_ -> Acc
 		end
 	end,
