@@ -86,21 +86,22 @@
 
 
 -record(todayhot_nodes, {
-    class_node = {0, 0}      %% {class, nodes}
+    ,node_id = 0 
     ,node_name    %% 节点名
     ,count = 0    %% 订阅数
-    ,news = []    %% 新闻列表 [#todayhot_news{}]
-    ,hot_news = [] %% 最新榜单数据
-    ,add_time = 0
-    ,up_time       
+    ,add_time = 0    
     ,users = []    %% 所属用户列表
 }).
 
+-record(todayhot_node_news, {
+    node = {0, 0}      %% {node_id, timezero}
+    ,news = []    %% 新闻列表 [#todayhot_news{}]
+    ,up_time   
+}).
+
 -record(todayhot_nodes_hotlist, {
-    class_node = {0, 0}      %% {class, nodes}
-    ,node_name    %% 节点名
-    ,count = 0    %% 订阅数
-    ,news = [] %% 最新榜单数据  
+    node = {0, 0}      %% {node_id, timezero}
+    ,news = []         %% 最新榜单数据  
 }).
 
 -record(todayhot_news, {

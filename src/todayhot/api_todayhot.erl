@@ -79,14 +79,14 @@ get_end_time_news([TN=#todayhot_news{time=Time}|NewsL], EndTime, ENewsL) when Ti
 get_end_time_news(_, _EndTime, ENewsL) ->
 	ENewsL.
 
-get_other_node(Class, NodeId) ->
-	case ets:lookup(?ETS_TODAYHOT, {Class, NodeId}) of
+get_other_node(NodeId, Today) ->
+	case ets:lookup(?ETS_TODAYHOT_NEWS, {NodeId, Today}) of
 		[TNode] -> TNode;
 		_ -> []
 	end.
 
-get_today_node(Class, NodeId) ->
-	case ets:lookup(?ETS_TODAYHOT_TODAY, {Class, NodeId}) of
+get_today_node(NodeId, Today) ->
+	case ets:lookup(?ETS_TODAYHOT_TODAY, {NodeId, Today}) of
 		[TNode] -> TNode;
 		_ -> []
 	end.
@@ -95,21 +95,21 @@ insert_today(Node) ->
 	ets:insert(?ETS_TODAYHOT_TODAY, Node).
 
 insert_other(Node) ->
-	ets:insert(?ETS_TODAYHOT, Node).
+	ets:insert(?ETS_TODAYHOT_NEWS, Node).
 
 get_today_data() ->
 	ets:tab2list(?ETS_TODAYHOT_TODAY).
 
 up_today_to_other() ->
 	TodayData = get_today_data(),
-	Fun = fun(TN=#todayhot_nodes{class_node={Class, NodeId}, news=TodayNewsL}) ->
-		case get_other_node(Class, NodeId) of
+	Fun = fun(TN=#todayhot_node_news{node={NodeId, Today}, news=TodayNewsL}) ->
+		case get_other_node(NodeId, Today) of
 			#todayhot_nodes{news=NewsL} ->
 				NTN = TN#todayhot_nodes{news = lists:reverse(lists:keysort(#todayhot_news.id, NewsL++TodayNewsL))},
-				insert_today(TN#todayhot_nodes{news=[]}),
+				insert_today(TN#todayhot_node_news{news=[]}),
 				insert_other(NTN);
 			_ ->
-				insert_today(TN#todayhot_nodes{news=[]}),
+				insert_today(TN#todayhot_node_news{news=[]}),
 				insert_other(TN)
 		end
 	end,

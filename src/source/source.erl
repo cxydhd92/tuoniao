@@ -448,13 +448,16 @@ new_add_json(Cfg, Data) ->
 	Abstract = get_data(DescF, Data, <<"">>),
 	Source = get_data(AuthorF, Data, <<"">>),
 	Img = get_data(ImgF, Data, <<"">>),
-	Count = parse_count(SourceId, get_data(CountF, Data, <<"0">>)),
-	TNews = #todayhot_news{
-		class = Class,
-		node_id = SourceId, title = Title, url=TUrl, news_time=NewTime, source=Source, count=Count
-		, abstract = Abstract, time=Now, img = Img
-	},
-	TNews.
+	case catch parse_count(SourceId, get_data(CountF, Data, <<"0">>)) of
+		Count when is_binary(Count) ->
+			#todayhot_news{
+				class = Class,
+				node_id = SourceId, title = Title, url=TUrl, news_time=NewTime, source=Source, count=Count
+				, abstract = Abstract, time=Now, img = Img
+			};
+		_ ->
+			false
+	end.
 
 do_parse_data(_, [], News, _, NTodayData, TopL) ->
 	{News, NTodayData, TopL};
@@ -462,21 +465,25 @@ do_parse_data(Cfg, [OldData|T], News, Now, TodayData, TopL) ->
 	#cfg_news_source{title=TitleF, is_top=IsTop, container = Container} = Cfg,
 	Data = get_item_data(OldData, Container), 
 	Title = get_data(TitleF, Data, <<"">>),
-	case IsTop =:= ?true of
-		true ->
-			TNews = new_add_json(Cfg, Data),
-			case lists:member(Title, TodayData) of
-				false -> %% 
-					do_parse_data(Cfg, T, [TNews|News], Now, [Title|TodayData], [TNews|TopL]);
-				_ ->
-					do_parse_data(Cfg, T, News, Now, TodayData, [TNews|TopL])
-			end;
+	TNews = new_add_json(Cfg, Data),
+	case TNews of
+		false ->
+			do_parse_data(Cfg, T, News, Now, TodayData, TopL);
 		_ ->
-			case lists:member(Title, TodayData) of
-				false -> %% 
-					TNews = new_add_json(Cfg, Data),
-					do_parse_data(Cfg, T, [TNews|News], Now, [Title|TodayData], TopL);
+			case IsTop =:= ?true of
+				true ->
+					case lists:member(Title, TodayData) of
+						false -> %% 
+							do_parse_data(Cfg, T, [TNews|News], Now, [Title|TodayData], [TNews|TopL]);
+						_ ->
+							do_parse_data(Cfg, T, News, Now, TodayData, [TNews|TopL])
+					end;
 				_ ->
-					do_parse_data(Cfg, T, News, Now, TodayData, TopL)
+					case lists:member(Title, TodayData) of
+						false -> %% 
+							do_parse_data(Cfg, T, [TNews|News], Now, [Title|TodayData], TopL);
+						_ ->
+							do_parse_data(Cfg, T, News, Now, TodayData, TopL)
+					end
 			end
 	end.

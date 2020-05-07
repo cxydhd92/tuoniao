@@ -39,7 +39,8 @@ init(Args) ->
             create_sys_id()
             ,create_todayhot_node()
             ,create_todayhot_user_cfg_node()
-            ,create_todayhot_news();
+            ,create_todayhot_news()
+            ,create_todayhot_node_hotlist();
         _ ->
             ignored
     end,
@@ -108,13 +109,11 @@ create_todayhot_node() ->
     Sql = 
     <<"CREATE TABLE IF NOT EXISTS `todayhot_node`(
         `node_id` INT(11) NOT NULL  COMMENT '订阅源节点id',
-        `class` INT(11) NOT NULL  COMMENT '分类',
         `count` INT(11) NOT NULL  COMMENT '订阅数',
         `users` text NOT NULL  COMMENT '自定义源用户列表',
         `add_time` INT(11)  NOT NULL COMMENT '时间',
         `up_time` INT(11)  NOT NULL COMMENT '最近更新时间',
-        PRIMARY KEY ( `node_id` ),
-        KEY `class` (`class`)
+        PRIMARY KEY ( `node_id` )
         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"/utf8
     >>,
     ok  = mysql_poolboy:query(?POOL, Sql),
@@ -141,7 +140,7 @@ create_todayhot_news() ->
     Sql = 
     <<"CREATE TABLE IF NOT EXISTS `todayhot_news`(
         `id` INT(11) NOT NULL COMMENT '新闻唯一id',
-        `class` INT(11) NOT NULL  COMMENT '分类',
+        `class` INT(11) NOT NULL  COMMENT 'class',
         `node_id` INT(11) NOT NULL  COMMENT '节点id',
         `abstract` text NOT NULL COMMENT '新闻摘要',
         `title` varchar(200) NOT NULL DEFAULT '' COMMENT '新闻标题',
@@ -153,7 +152,20 @@ create_todayhot_news() ->
         `img` VARCHAR(200) NOT NULL DEFAULT '' COMMENT '图片',
         `news_time` INT(11) NOT NULL  COMMENT '新闻时间',
         `time` INT(11) NOT NULL  COMMENT '抓取时间',
-        PRIMARY KEY ( `id` )
+        PRIMARY KEY ( `id` ),
+        KEY `class` (`node_id`)
+        )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"/utf8
+    >>,
+    ok  = mysql_poolboy:query(?POOL, Sql),
+    ok.
+
+create_todayhot_node_hotlist() ->
+    Sql = 
+    <<"CREATE TABLE IF NOT EXISTS `todayhot_node_hotlist`(
+        `node_id` INT(11) NOT NULL  COMMENT '订阅源节点id',
+        `zero` INT(11) NOT NULL  COMMENT '每天零点时间戳',
+        `news` text NOT NULL  COMMENT '榜单数据',
+        PRIMARY KEY ( `node_id`, `zero`)
         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"/utf8
     >>,
     ok  = mysql_poolboy:query(?POOL, Sql),

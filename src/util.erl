@@ -3,7 +3,10 @@
 
 -export([now/0, local_time/0, datetime_to_timestamp/1, timestamp_to_datetime/1, format_utc_timestamp/0
 , term_to_bitstring/1, bitstring_to_term/1, today/0, fbin/2, fbin/1,
-date_format/2]).
+date_format/2
+,ceil/1
+,today/1
+]).
 
 get_month(MonthStr) ->
     MonthL = [{"Jan", 1}, {"Feb", 2}, {"Mar", 3}, {"Apr", 4}, {"May", 5}, {"Jun", 6}, {"Jul", 7}, {"Aug", 8}, {"Sep", 9}, {"Oct", 10}, {"Nov", 11}, {"Dec", 12}],
@@ -66,7 +69,21 @@ now() ->
 today() ->
     {{Year, Month, Day}, _} = local_time(),
     datetime_to_timestamp({{Year, Month, Day}, {0, 0, 0}}).
+    
+today(Unixtime) ->
+    Base = util:today(),
+    case Unixtime > Base of
+        false -> Base - util:ceil((Base-Unixtime) / 86400) * 86400;
+        _ ->
+            (Unixtime - Base) div 86400*86400 + Base
+    end.
 
+ceil(X) ->
+    T = erlang:trunc(X),
+    case X > T of
+        true -> T+1;
+        _ -> T
+    end.
 %% {{Year, Month, Day}, {Hour, Minite, Second}}
 local_time() ->
     calendar:local_time().
