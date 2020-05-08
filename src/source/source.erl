@@ -119,11 +119,11 @@ handle_init([{MgrPid, SourceId, IsUser}]) ->
 	?INFO("SourceId~w start",[SourceId]),
 	State = #source{list = [{SourceId, IsUser}], mgr_pid = MgrPid},
 	erlang:send_after(10*1000, self(), start_spider),
-	% Today = util:today(),
+	Today = util:today(),
 	% Sec = Today+86400 - util:now(),
 	% erlang:send_after(Sec*1000*3, self(), zero_up),
-	#cfg_news_source{class = Class} = cfg_news_source:get(SourceId),
-	News = api_todayhot:get_node_news_num(Class, SourceId, 100),
+	% #cfg_news_source{class = Class} = cfg_news_source:get(SourceId),
+	News = api_todayhot:get_node_news_num(SourceId, Today, 100),
 	TitleL = [Title||#todayhot_news{title=Title}<-News],
 	% gc_timer(),
 	?INFO("SourceId~w titlelen ~w end",[SourceId, length(TitleL)]),
@@ -141,8 +141,8 @@ do_handle_cast(_Msg, State)->
 
 do_handle_info({add_source, SourceId, IsUser}, State=#source{list = List, titles = ATitleL}) ->
 	NList = [{SourceId, IsUser}|lists:keydelete(SourceId, 1, List)],
-	#cfg_news_source{class = Class} = cfg_news_source:get(SourceId),
-	News = api_todayhot:get_node_news_num(Class, SourceId, 100),
+	Today = util:today(),
+	News = api_todayhot:get_node_news_num(SourceId, Today, 100),
 	TitleL = [Title||#todayhot_news{title=Title}<-News],
 	?INFO("SourceId~w titlelen ~w end",[SourceId, length(TitleL)]),
 	{noreply, State#source{list = NList, titles = [{SourceId, TitleL}|lists:keydelete(SourceId, 1, ATitleL)]}};
@@ -379,7 +379,7 @@ do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 			TodayData
 	end.
 
-get_data(<<"">>, Body, Default) -> Default;
+get_data(<<"">>, _Body, Default) -> Default;
 get_data(Data, Body, Default) ->
 	DataStr = ?b2l(Data),
 	DataL = string:tokens(DataStr, "|"),

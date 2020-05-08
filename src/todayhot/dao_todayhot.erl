@@ -3,7 +3,7 @@
 -include("common.hrl").
 -include("todayhot.hrl").
 
--export([load/0, load_sys_id/0, up_news_db/2, up_db_nodes/1]).
+-export([load/0, load_sys_id/0, up_news_db/2, up_db_nodes/1, up_hotlist_db/0]).
 
 load() ->
     Sql = <<"select node_id, count, add_time, users from todayhot_node ">>,
@@ -12,6 +12,10 @@ load() ->
     LimitTime = Now - 90*86400,
     Sql1 = <<"select id, node_id, class, abstract, title, url, source, count, sub_news, same_id, img, news_time, time from todayhot_news where time>=?">>,
     {ok, _, Data1}  = mysql_poolboy:query(?POOL, Sql1, [LimitTime]),
+
+    Sql2 = <<"select node_id, zero, news from todayhot_node_hotlist where zero>=?">>,
+    {ok, _, Data2}  = mysql_poolboy:query(?POOL, Sql2, [LimitTime]),
+
     Today = util:today(),
     Fun = fun([NodeId, Count, Time, Users], Acc) ->
         NUsers = util:bitstring_to_term(Users),
@@ -31,14 +35,20 @@ load() ->
         end
     end,
     {OL, TL} = lists:foldl(Fun1, {[], []}, Data1),
-    {Nodes, OL, TL}.
+
+    Fun2 = fun([NodeId, Zero, News], Acc) ->
+        NNews = util:bitstring_to_term(News),
+        [#todayhot_node_news{node = {NodeId, Zero}, news=NNews}|Acc]
+    end,
+    HotList = lists:foldl(Fun2, [], Data2),
+    {Nodes, OL, TL, HotList}.
 
 add_news(Acc, Today, [Id, NodeId, Class, Abstract, Title, Url, Source, Count, SubNews, SameId, NewsTime, CTime, Img]) ->
     case lists:keytake({NodeId, Today}, #todayhot_node_news.node, Acc) of
             {value, TN=#todayhot_node_news{news = NewsL}, RtAcc1} ->
                 News = #todayhot_news{id = Id, node_id = NodeId, class = Class, same_id=SameId, abstract = Abstract, 
                 title = Title, url=Url, count=Count, source=Source, news_time=NewsTime, sub_news=SubNews, time=CTime, img=Img},
-                [TN#todayhot_node_news{news = [News|NewsL]}|RtAcc1];
+                [TN#todayhot_node_news{news = lists:reverse(lists:keysort(#todayhot_news.id, [News|NewsL]))}|RtAcc1];
             _ ->
                 News = #todayhot_news{id = Id, node_id = NodeId, class = Class, same_id=SameId, abstract = Abstract, 
                 title = Title, url=Url, count=Count, source=Source, news_time=NewsTime, sub_news=SubNews, time=CTime, img=Img},
@@ -92,7 +102,7 @@ up_db_nodes(NNodesL) ->
         [NodeId, Count, AddTime, util:term_to_bitstring(Users) | NewsAcc]
     end,
     NewNodeL = lists:foldl(Fun, [], NNodesL),
-    Len = length(NNodesL),
+    Len = length(NNodesL) div 4,
     SqlSub = "REPLACE INTO todayhot_node(node_id, count, add_time, users) VALUES ",
     Sql = list_to_binary(lists:concat([SqlSub, lists:duplicate(Len-1, "(?,?,?,?),"), "(?,?,?,?)"])),
     ok = mysql_poolboy:query(?POOL, Sql, NewNodeL),
@@ -104,3 +114,21 @@ do_up_db_news(NNewsL) ->
     Sql = list_to_binary(lists:concat([SqlSub, lists:duplicate(Len-1, "(?,?,?,?,?,?,?,?,?,?,?,?,?),"), "(?,?,?,?,?,?,?,?,?,?,?,?,?)"])),
     ok = mysql_poolboy:query(?POOL, Sql, NNewsL),
     ok.
+
+up_hotlist_db() ->
+    NNewsL = up_hotlist_db_f1(ets:first(?ETS_TODAYHOT_HOTLIST), []),
+    Len = length(NNewsL) div 3,
+    SqlSub = "REPLACE INTO todayhot_node_hotlist(node_id, zero, news) VALUES ",
+    Sql = list_to_binary(lists:concat([SqlSub, lists:duplicate(Len-1, "(?,?,?),"), "(?,?,?)"])),
+    ok = mysql_poolboy:query(?POOL, Sql, NNewsL),
+    ok.
+
+up_hotlist_db_f1('$end_of_table', List) -> List;
+up_hotlist_db_f1({NodeId, Today}, List) ->
+    NList = case ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}) of
+        [#todayhot_node_news{node={NodeId, Today}, news=TodayNewsL}] ->
+            [NodeId, Today, util:term_to_bitstring(TodayNewsL) | List];
+        _ ->
+            List
+    end,
+    up_hotlist_db_f1(ets:next(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}), NList).

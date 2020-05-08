@@ -7,6 +7,7 @@
 		,get_node_news/2, get_node_news/3,get_node_up_time/2,
 		get_end_time_news/3,get_node_news_num/3,
 		insert_new_hot/3
+		,get_today_data/0
 ]).
 
 
@@ -18,6 +19,7 @@ insert_new_hot(_Class, NodeId, NewsL) ->
 		_ -> 
 			ets:insert(?ETS_TODAYHOT_HOTLIST, #todayhot_nodes_hotlist{node={NodeId,Today}, news = NewsL})
 	end.
+
 
 is_exist(_Title, []) -> false;
 is_exist(Title, [#todayhot_news{sub_news=SubNews}|T]) ->
@@ -47,12 +49,29 @@ get_node_news_num(NodeId, Zero, Num) ->
 					lists:sublist(News, Num);
 				_ ->
 					SNum = Num - TNum,
-					#todayhot_node_news{news = ONews} = get_other_node(NodeId, Zero),
-					lists:sublist(News, TNum) ++ lists:sublist(ONews, SNum)
+					#todayhot_node_news{news = ONews} = get_other_node(NodeId, Zero-86400),
+					case length(ONews) >= SNum of
+						true ->
+							lists:sublist(ONews, SNum) ++ News;
+						_ ->
+							SSNum = SNum - length(ONews),
+							#todayhot_node_news{news = QONews} = get_other_node(NodeId, Zero-86400-86400),
+							lists:sublist(QONews, SSNum) ++ ONews ++ News
+					end
+					
 			end;
 		#todayhot_node_news{news = News} ->
 			News;
-		_ -> []
+		_ -> 
+			#todayhot_node_news{news = ONews} = get_other_node(NodeId, Zero-86400),
+			case length(ONews) >= Num of
+				true ->
+					lists:sublist(ONews, Num);
+				_ ->
+					SSNum = Num - length(ONews),
+					#todayhot_node_news{news = QONews} = get_other_node(NodeId, Zero-86400-86400),
+					lists:sublist(QONews, SSNum) ++ ONews
+			end
     end.
 
 get_node_news(NodeId, Zero) ->
@@ -83,13 +102,13 @@ get_end_time_news(_, _EndTime, ENewsL) ->
 get_other_node(NodeId, Today) ->
 	case ets:lookup(?ETS_TODAYHOT_NEWS, {NodeId, Today}) of
 		[TNode] -> TNode;
-		_ -> []
+		_ -> #todayhot_node_news{}
 	end.
 
 get_today_node(NodeId, Today) ->
 	case ets:lookup(?ETS_TODAYHOT_TODAY, {NodeId, Today}) of
 		[TNode] -> TNode;
-		_ -> []
+		_ -> #todayhot_node_news{}
 	end.
 
 insert_today(Node) ->
@@ -102,16 +121,28 @@ get_today_data() ->
 	ets:tab2list(?ETS_TODAYHOT_TODAY).
 
 up_today_to_other() ->
-	TodayData = get_today_data(),
-	Fun = fun(TN=#todayhot_node_news{node={NodeId, Today}, news=TodayNewsL}) ->
-		case get_other_node(NodeId, Today) of
-			#todayhot_node_news{news=NewsL} ->
-				NTN = TN#todayhot_node_news{news = lists:reverse(lists:keysort(#todayhot_news.id, NewsL++TodayNewsL))},
-				insert_today(TN#todayhot_node_news{news=[]}),
-				insert_other(NTN);
-			_ ->
-				insert_today(TN#todayhot_node_news{news=[]}),
-				insert_other(TN)
-		end
+	today_to_other(),
+	ok.
+
+
+today_to_other() ->
+	today_to_other_f1(ets:first(?ETS_TODAYHOT_TODAY)),
+	ok.
+
+today_to_other_f1('$end_of_table') -> ok;
+today_to_other_f1({NodeId, Today}) ->
+	case ets:lookup(?ETS_TODAYHOT_TODAY, {NodeId, Today}) of
+		[TN=#todayhot_node_news{node={NodeId, Today}, news=TodayNewsL}] ->
+			case get_other_node(NodeId, Today) of
+				#todayhot_node_news{news=NewsL} ->
+					NTN = TN#todayhot_node_news{news = lists:reverse(lists:keysort(#todayhot_news.id, NewsL++TodayNewsL))},
+					insert_today(TN#todayhot_node_news{news=[]}),
+					insert_other(NTN);
+				_ ->
+					insert_today(TN#todayhot_node_news{news=[]}),
+					insert_other(TN)
+			end;
+		_ ->
+			ignored
 	end,
-	lists:foreach(Fun, TodayData).
+	today_to_other_f1(ets:next(?ETS_TODAYHOT_TODAY, {NodeId, Today})).

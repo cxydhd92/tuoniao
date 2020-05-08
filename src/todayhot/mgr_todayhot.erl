@@ -54,11 +54,12 @@ init(_Args) ->
 	ets:new(?ETS_TODAYHOT_NEWS, [named_table, {keypos, #todayhot_node_news.node}]),
 	ets:new(?ETS_TODAYHOT_TODAY, [named_table, {keypos, #todayhot_node_news.node}]),
 	ets:new(?ETS_TODAYHOT_HOTLIST, [named_table, {keypos, #todayhot_nodes_hotlist.node}, public]),
-    {Nodes,Data,TodayData} = dao_todayhot:load(),
+    {Nodes,Data,TodayData, HotList} = dao_todayhot:load(),
     MaxId = dao_todayhot:load_sys_id(),
 	ets:insert(?ETS_TODAYHOT, Nodes),
 	ets:insert(?ETS_TODAYHOT_NEWS, Data),
 	ets:insert(?ETS_TODAYHOT_TODAY, TodayData),
+	ets:insert(?ETS_TODAYHOT_HOTLIST, HotList),
 	erlang:send_after(?db_sec*1000, self(), up_db),
 	Today = util:today(),
 	Sec = Today+86400 - util:now(),
@@ -113,6 +114,7 @@ do_handle_cast(_Msg, State)->
 
 do_handle_info(zero_up, State=#mgr_todayhot{}) ->
 	api_todayhot:up_today_to_other(),
+	dao_todayhot:up_hotlist_db(),
 	erlang:send_after(86400*1000, self(), zero_up),
 	{noreply, State};
 do_handle_info(up_db, State=#mgr_todayhot{changes = Changes, aid=AId, up_nodes=UpNodes}) ->
