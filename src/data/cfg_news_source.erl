@@ -286,6 +286,98 @@ get(20008) ->
 		time_type = 2
 	};
 
+get(20009) ->
+	#cfg_news_source{
+		source_id = 20009,
+		class = 2,
+		sub_class = 1,
+		name = <<"IT之家.日榜"/utf8>>,
+		icon_name = <<"ithome"/utf8>>,
+		url = <<"https://www.ithome.com"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"<h4>24小时阅读榜</h4><ul>([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20015) ->
+	#cfg_news_source{
+		source_id = 20015,
+		class = 2,
+		sub_class = 1,
+		name = <<"IT之家.周榜"/utf8>>,
+		icon_name = <<"ithome"/utf8>>,
+		url = <<"https://www.ithome.com"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"<h4>周榜</h4><ul>([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20017) ->
+	#cfg_news_source{
+		source_id = 20017,
+		class = 2,
+		sub_class = 1,
+		name = <<"IT之家.月榜"/utf8>>,
+		icon_name = <<"ithome"/utf8>>,
+		url = <<"https://www.ithome.com"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"<h4>月榜</h4><ul>([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20019) ->
+	#cfg_news_source{
+		source_id = 20019,
+		class = 2,
+		sub_class = 1,
+		name = <<"IT之家.7天热评"/utf8>>,
+		icon_name = <<"ithome"/utf8>>,
+		url = <<"https://www.ithome.com"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"<h4>7天热评</h4><ul>([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
 get(60001) ->
 	#cfg_news_source{
 		source_id = 60001,
@@ -373,6 +465,10 @@ list_key() ->
 		20006,
 		20007,
 		20008,
+		20009,
+		20015,
+		20017,
+		20019,
 		60001,
 		60002,
 		110001
@@ -381,7 +477,7 @@ news_source_class(1) ->
 	[10001,10002,10003,10004];
 
 news_source_class(2) ->
-	[20001,20002,20003,20004,20005,20006,20007,20008];
+	[20001,20002,20003,20004,20005,20006,20007,20008, 20009, 20015, 20017, 20019];
 
 news_source_class(6) ->
 	[60001,60002];
