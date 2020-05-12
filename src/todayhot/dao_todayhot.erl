@@ -102,7 +102,7 @@ up_db_nodes(NNodesL) ->
         [NodeId, Count, AddTime, util:term_to_bitstring(Users) | NewsAcc]
     end,
     NewNodeL = lists:foldl(Fun, [], NNodesL),
-    Len = length(NNodesL) div 4,
+    Len = length(NNodesL),
     SqlSub = "REPLACE INTO todayhot_node(node_id, count, add_time, users) VALUES ",
     Sql = list_to_binary(lists:concat([SqlSub, lists:duplicate(Len-1, "(?,?,?,?),"), "(?,?,?,?)"])),
     ok = mysql_poolboy:query(?POOL, Sql, NewNodeL),

@@ -126,7 +126,7 @@ do_handle_info({up_news, Class, NodeId, AddNews, Time}, State=#mgr_todayhot{chan
 		?INFO("up_news len ~w Class~w NodeId~w aid~w", [length(AddNews), Class, NodeId, AId]),
 	NodeIdL = lists:delete(NodeId, cfg_news_source:news_source_class(Class)),
 	Today = util:today(),
-	{NNode, NAId1, NChangesL} = case api_todayhot:get_today_node(NodeId, Today) of
+	{NNode, NAId1, NChangesL} = case api_todayhot:get_today_node_false(NodeId, Today) of
 		Node = #todayhot_node_news{news = NewsL} ->
 			{NNewsL, NAId, NAddNews} = add_news(NewsL, Today, NodeIdL, AddNews, AId ,Changes),
 			{Node#todayhot_node_news{news = NNewsL, up_time = Time}, NAId, NAddNews};
@@ -154,7 +154,7 @@ add_news(NewsL, Today, NodeIdL, AddNews, AId,Changes) ->
 %% 简单的匹配标题相似度
 is_same_title(News, _, []) -> {News, false};
 is_same_title(News, Today, [NodeId|T]) ->
-	case api_todayhot:get_today_node(NodeId, Today) of
+	case api_todayhot:get_today_node_false(NodeId, Today) of
 		Node = #todayhot_node_news{news = NewsL} ->
 			case is_same_title(News, NewsL) of
 				false -> is_same_title(News, Today, T);

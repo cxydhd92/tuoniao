@@ -8,6 +8,7 @@
 		get_end_time_news/3,get_node_news_num/3,
 		insert_new_hot/3
 		,get_today_data/0
+		,get_today_node_false/2
 ]).
 
 
@@ -111,7 +112,14 @@ get_today_node(NodeId, Today) ->
 		_ -> #todayhot_node_news{}
 	end.
 
+get_today_node_false(NodeId, Today) ->
+	case ets:lookup(?ETS_TODAYHOT_TODAY, {NodeId, Today}) of
+		[TNode] -> TNode;
+		_ -> false
+	end.
+
 insert_today(Node) ->
+	% ?INFO("xxxxNode~w",[Node]),
 	ets:insert(?ETS_TODAYHOT_TODAY, Node).
 
 insert_other(Node) ->

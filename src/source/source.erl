@@ -273,7 +273,7 @@ do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 			ItemImgFL = get_html_data(ImgF, Item),
 			ItemCountFL = get_html_data(CountF, Item),
 			ItemTimeFL = get_html_data(TimeF, Item),
-			% ?INFO("ItemTitleL~w",[ItemTitleL]),
+			% ?INFO("ItemLinkAL~w",[ItemLinkAL]),
 			{NNews, NTodayData, NewHotList} = do_parse_html(Cfg, TodayData, [], [], Now, ItemTitleL, ItemLinkAL, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCountFL, ItemTimeFL),
 			?IF(length(NNews)>0, mgr_todayhot:send({up_news, Class, SourceId, NNews, Now}), ignored),
 			?IF(NewHotList=/=[], api_todayhot:insert_new_hot(Class, SourceId, lists:reverse(NewHotList)), ignored),

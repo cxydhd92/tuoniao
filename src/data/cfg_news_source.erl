@@ -309,6 +309,98 @@ get(20009) ->
 		time_type = 0
 	};
 
+get(20010) ->
+	#cfg_news_source{
+		source_id = 20010,
+		class = 2,
+		sub_class = 1,
+		name = <<"科普中国.热榜"/utf8>>,
+		icon_name = <<"kepuchina"/utf8>>,
+		url = <<"https://www.kepuchina.cn/tech/"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"<h2>热点排行</h2>[\\s\\S]+?<ul class=\"list\">([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<h2><a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"<h2><a href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"<em>([\\s\\S]+?)</em>"/utf8>>,
+		img = <<"src=\"([^\"]+?)\""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20011) ->
+	#cfg_news_source{
+		source_id = 20011,
+		class = 2,
+		sub_class = 1,
+		name = <<"爱范儿.最新"/utf8>>,
+		icon_name = <<"ifanr"/utf8>>,
+		url = <<"https://sso.ifanr.com/api/v5/wp/web-feed/?limit=20&offset=0"/utf8>>,
+		type = 1,
+		is_top = 0,
+		link_pre = <<""/utf8>>,
+		data = <<"objects"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"post_title"/utf8>>,
+		link_a = <<"post_url"/utf8>>,
+		desc = <<"post_excerpt"/utf8>>,
+		author = <<"created_by|name"/utf8>>,
+		img = <<"post_cover_image"/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"created_at"/utf8>>,
+		time_type = 1
+	};
+
+get(20012) ->
+	#cfg_news_source{
+		source_id = 20012,
+		class = 2,
+		sub_class = 1,
+		name = <<"威锋网.最新"/utf8>>,
+		icon_name = <<"feng"/utf8>>,
+		url = <<"https://www.feng.com/news/all"/utf8>>,
+		type = 2,
+		is_top = 0,
+		link_pre = <<"https://www.feng.com"/utf8>>,
+		data = <<"<ul class=\"home-list-wrap\"[^>]+?>([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<"<div class=\"desc\"[^>]+?>([\\s\\S]+?)</div>"/utf8>>,
+		author = <<"<span class=\"name pointer\"[^>]+?>([\\s\\S]+?)</span>"/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20013) ->
+	#cfg_news_source{
+		source_id = 20013,
+		class = 2,
+		sub_class = 1,
+		name = <<"AppSolution.最新"/utf8>>,
+		icon_name = <<"ifanr"/utf8>>,
+		url = <<"https://sso.ifanr.com/api/v5/wp/article/?post_type=app&limit=1&offset=0"/utf8>>,
+		type = 1,
+		is_top = 0,
+		link_pre = <<""/utf8>>,
+		data = <<"objects"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"post_title"/utf8>>,
+		link_a = <<"post_url"/utf8>>,
+		desc = <<"post_excerpt"/utf8>>,
+		author = <<"created_by|name"/utf8>>,
+		img = <<"post_cover_image"/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"created_at"/utf8>>,
+		time_type = 1
+	};
+
 get(20015) ->
 	#cfg_news_source{
 		source_id = 20015,
@@ -326,6 +418,29 @@ get(20015) ->
 		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
 		desc = <<""/utf8>>,
 		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20016) ->
+	#cfg_news_source{
+		source_id = 20016,
+		class = 2,
+		sub_class = 1,
+		name = <<"科普中国.最新"/utf8>>,
+		icon_name = <<"kepuchina"/utf8>>,
+		url = <<"https://www.kepuchina.cn/more/index.shtml"/utf8>>,
+		type = 2,
+		is_top = 0,
+		link_pre = <<"https://www.kepuchina.cn"/utf8>>,
+		data = <<"<h2>滚动</h2>([\\s\\S]+?)<h2>热点排行</h2>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<h2><a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"<h2><a href=\"[.]([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"<p><span>([\\s\\S]+?)</span>"/utf8>>,
 		img = <<""/utf8>>,
 		count = <<""/utf8>>,
 		time = <<""/utf8>>,
@@ -466,7 +581,12 @@ list_key() ->
 		20007,
 		20008,
 		20009,
+		20010,
+		20011,
+		20012,
+		20013,
 		20015,
+		20016,
 		20017,
 		20019,
 		60001,
@@ -477,13 +597,13 @@ news_source_class(1) ->
 	[10001,10002,10003,10004];
 
 news_source_class(2) ->
-	[20001,20002,20003,20004,20005,20006,20007,20008, 20009, 20015, 20017, 20019];
+	[20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20015,20016,20017,20019];
 
 news_source_class(6) ->
 	[60001,60002];
 
 news_source_class(11) ->
-	[110001];
+	[110001, 10003];
 
 news_source_class(_) -> []. 
 
