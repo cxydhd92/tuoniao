@@ -363,9 +363,9 @@ get_send_url(SourceId, Url, Now) ->
 			?b2l(Url)
 	end.
 
-do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, TodayData, Now) ->
+do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url,head=Head}, TodayData, Now) ->
 	NUrl = get_send_url(SourceId, Url, Now),
-    case ibrowse:send_req(NUrl, [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+    case ibrowse:send_req(NUrl, Head++[{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, ResponseBody} ->
 			BodyJsonBin = list_to_binary(ResponseBody),
 			BodyTerm = jsx:decode(BodyJsonBin),

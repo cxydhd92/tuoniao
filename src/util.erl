@@ -33,6 +33,7 @@ date_format(Type, Date) ->
         2 -> other_date_format(Date);
         3 -> atom_date_format(Date);
         4 -> rss_date_format(Date);
+        5 -> Date div 1000; %% 毫秒时间戳
         _ -> util:now()
     end.
 

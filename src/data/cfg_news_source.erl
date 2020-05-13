@@ -402,6 +402,30 @@ get(20013) ->
 		time_type = 1
 	};
 
+get(20014) ->
+	#cfg_news_source{
+		source_id = 20014,
+		class = 2,
+		sub_class = 1,
+		name = <<"威锋网.社区热门"/utf8>>,
+		icon_name = <<"feng"/utf8>>,
+		url = <<"https://beta-api.feng.com/v1/flow/topic/feed?topicId=0&feedTyp=hot&pageCount=6"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<"https://www.feng.com/post/"/utf8>>,
+		data = <<"data|dataList"/utf8>>,
+		container = <<"thread"/utf8>>,
+		title = <<"subject"/utf8>>,
+		link_a = <<"tid"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"author"/utf8>>,
+		img = <<"newsIcon"/utf8>>,
+		count = <<"views"/utf8>>,
+		time = <<"dateline"/utf8>>,
+		time_type = 1,
+		head = [{"X-Request-Id", "JRwMHTWcL7zDg5snIl2ffyKRa8SS3hLmq56YI/WpkfnS5MFaBXKvPk9JovDwtuiCcKt++EHpJKVQt9QVeN4ivQ=="}]
+	};
+
 get(20015) ->
 	#cfg_news_source{
 		source_id = 20015,
@@ -471,6 +495,30 @@ get(20017) ->
 		time_type = 0
 	};
 
+get(20018) ->
+	#cfg_news_source{
+		source_id = 20018,
+		class = 2,
+		sub_class = 1,
+		name = <<"威锋网.72h热榜"/utf8>>,
+		icon_name = <<"feng"/utf8>>,
+		url = <<"https://beta-api.feng.com/v1/flow/topic/feed?topicId=0&feedTyp=new_hot&pageCount=6"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<"https://www.feng.com/post/"/utf8>>,
+		data = <<"data|dataList"/utf8>>,
+		container = <<"thread"/utf8>>,
+		title = <<"subject"/utf8>>,
+		link_a = <<"tid"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"author"/utf8>>,
+		img = <<"newsIcon"/utf8>>,
+		count = <<"views"/utf8>>,
+		time = <<"dateline"/utf8>>,
+		time_type = 1,
+		head = [{"X-Request-Id", "JRwMHTWcL7zDg5snIl2ffyKRa8SS3hLmq56YI/WpkfkVG7SKctpbUL64UY6BpxeZdUoeqg9PmBAHxkXxVu7zwg=="}]
+	};
+
 get(20019) ->
 	#cfg_news_source{
 		source_id = 20019,
@@ -492,6 +540,100 @@ get(20019) ->
 		count = <<""/utf8>>,
 		time = <<""/utf8>>,
 		time_type = 0
+	};
+
+get(20020) ->
+	#cfg_news_source{
+		source_id = 20020,
+		class =2,
+		sub_class = 1,
+		name = <<"极客公园.最新"/utf8>>,
+		icon_name = <<"geekpark"/utf8>>,
+		url = <<"https://mainssl.geekpark.net/api/v2?page=1"/utf8>>,
+		type = 1,
+		is_top = 0,
+		link_pre = <<"https://www.geekpark.net/news/"/utf8>>,
+		data = <<"homepage_posts"/utf8>>,
+		container = <<"post"/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"id"/utf8>>,
+		desc = <<"abstract"/utf8>>,
+		author = <<"authors|nickname"/utf8>>,
+		img = <<"cover_url"/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"published_timestamp"/utf8>>,
+		time_type = 1
+	};
+
+get(20021) ->
+	#cfg_news_source{
+		source_id = 20021,
+		class = 2,
+		sub_class = 1,
+		name = <<"36Kr.最新"/utf8>>,
+		icon_name = <<"36kr"/utf8>>,
+		url = <<"https://36kr.com/information/web_news/latest"/utf8>>,
+		type = 4,
+		is_top = 0,
+		link_pre = <<""/utf8>>,
+		data = <<"information|informationList|itemList"/utf8>>,
+		container = <<"templateMaterial"/utf8>>,
+		title = <<"widgetTitle"/utf8>>,
+		link_a = <<"itemId"/utf8>>,
+		desc = <<"summary"/utf8>>,
+		author = <<"authorName"/utf8>>,
+		img = <<"widgetImage"/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"publishTime"/utf8>>,
+		time_type = 5,
+		json_data = <<"{\"navigator\"((.|\n)*?)\"userInfo\":null}"/utf8>>
+	};
+
+get(20022) ->
+	#cfg_news_source{
+		source_id = 20022,
+		class = 2,
+		sub_class = 1,
+		name = <<"数字尾巴.最新"/utf8>>,
+		icon_name = <<"dgtle"/utf8>>,
+		url = <<"https://www.dgtle.com/rss/dgtle.xml"/utf8>>,
+		type = 3,
+		is_top = 0,
+		link_pre = <<""/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<""/utf8>>,
+		link_a = <<""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20023) ->
+	#cfg_news_source{
+		source_id = 20023,
+		class = 2,
+		sub_class = 1,
+		name = <<"凤凰科技.24H必读"/utf8>>,
+		icon_name = <<"ifeng"/utf8>>,
+		url = <<"https://tech.ifeng.com/24h/"/utf8>>,
+		type = 4,
+		is_top = 0,
+		link_pre = <<""/utf8>>,
+		data = <<"initNewsData"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<"summary"/utf8>>,
+		author = <<"source"/utf8>>,
+		img = <<"thumbnail"/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"newsTime"/utf8>>,
+		time_type = 2,
+		json_data = <<"{\"nav\"((.|\n)*?)\"}]}"/utf8>>
 	};
 
 get(60001) ->
@@ -586,10 +728,16 @@ list_key() ->
 		20011,
 		20012,
 		20013,
+		20014,
 		20015,
 		20016,
 		20017,
+		20018,
 		20019,
+		20020,
+		20021,
+		20022,
+		20023,
 		60001,
 		60002,
 		110001
@@ -598,7 +746,7 @@ news_source_class(1) ->
 	[10001,10002,10003,10004];
 
 news_source_class(2) ->
-	[20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20015,20016,20017,20019];
+	[20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023];
 
 news_source_class(6) ->
 	[60001,60002];

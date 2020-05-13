@@ -17,7 +17,7 @@ get(2) ->
 	#cfg_news_class{
 		id = 2,
 		sort = 2,
-		name = <<"科技"/utf8>>
+		name = <<"科技.互联网"/utf8>>
 	};
 
 get(3) ->
@@ -45,14 +45,14 @@ get(6) ->
 	#cfg_news_class{
 		id = 6,
 		sort = 6,
-		name = <<"社区"/utf8>>
+		name = <<"社区.博客"/utf8>>
 	};
 
 get(7) ->
 	#cfg_news_class{
 		id = 7,
 		sort = 7,
-		name = <<"知识"/utf8>>
+		name = <<"知识.阅读"/utf8>>
 	};
 
 get(8) ->
@@ -66,7 +66,7 @@ get(9) ->
 	#cfg_news_class{
 		id = 9,
 		sort = 9,
-		name = <<"影音小说"/utf8>>
+		name = <<"影音.小说"/utf8>>
 	};
 
 get(10) ->

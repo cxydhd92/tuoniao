@@ -18,7 +18,8 @@
 	'count',
 	'time',
 	'time_type',
-	'json_data'
+	'json_data',
+	'head' = []
 }).
 
 

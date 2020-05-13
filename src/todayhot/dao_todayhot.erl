@@ -108,6 +108,7 @@ up_db_nodes(NNodesL) ->
     ok = mysql_poolboy:query(?POOL, Sql, NewNodeL),
     ok.
 
+do_up_db_news([]) -> ok;
 do_up_db_news(NNewsL) ->
     Len = length(NNewsL) div 13,
     SqlSub = "REPLACE INTO todayhot_news(id, node_id, class, abstract, title, url, source, count, news_time, sub_news, same_id, img, time) VALUES ",
@@ -116,17 +117,21 @@ do_up_db_news(NNewsL) ->
     ok.
 
 up_hotlist_db() ->
-    NNewsL = up_hotlist_db_f1(ets:first(?ETS_TODAYHOT_HOTLIST), []),
-    Len = length(NNewsL) div 3,
-    SqlSub = "REPLACE INTO todayhot_node_hotlist(node_id, zero, news) VALUES ",
-    Sql = list_to_binary(lists:concat([SqlSub, lists:duplicate(Len-1, "(?,?,?),"), "(?,?,?)"])),
-    ok = mysql_poolboy:query(?POOL, Sql, NNewsL),
+    case up_hotlist_db_f1(ets:first(?ETS_TODAYHOT_HOTLIST), []) of
+        NNewsL when NNewsL =/= [] ->
+            Len = length(NNewsL) div 3,
+            SqlSub = "REPLACE INTO todayhot_node_hotlist(node_id, zero, news) VALUES ",
+            Sql = list_to_binary(lists:concat([SqlSub, lists:duplicate(Len-1, "(?,?,?),"), "(?,?,?)"])),
+            ok = mysql_poolboy:query(?POOL, Sql, NNewsL);
+        _ ->
+            ignored
+    end,
     ok.
 
 up_hotlist_db_f1('$end_of_table', List) -> List;
 up_hotlist_db_f1({NodeId, Today}, List) ->
     NList = case ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}) of
-        [#todayhot_node_news{node={NodeId, Today}, news=TodayNewsL}] ->
+        [#todayhot_nodes_hotlist{node={NodeId, Today}, news=TodayNewsL}] ->
             [NodeId, Today, util:term_to_bitstring(TodayNewsL) | List];
         _ ->
             List
