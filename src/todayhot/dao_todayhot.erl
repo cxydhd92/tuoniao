@@ -37,8 +37,14 @@ load() ->
     {OL, TL} = lists:foldl(Fun1, {[], []}, Data1),
 
     Fun2 = fun([NodeId, Zero, News], Acc) ->
-        NNews = util:bitstring_to_term(News),
-        [#todayhot_node_news{node = {NodeId, Zero}, news=NNews}|Acc]
+        ?INFO("NodeId ~w",[NodeId]),
+        case util:bitstring_to_term(News) of
+            {error, _Err} ->
+                ?ERR("_ERR ~w",[_Err]),
+                Acc;
+            NNews -> 
+                [#todayhot_node_news{node = {NodeId, Zero}, news=NNews}|Acc]
+        end
     end,
     HotList = lists:foldl(Fun2, [], Data2),
     {Nodes, OL, TL, HotList}.
@@ -131,7 +137,7 @@ up_hotlist_db() ->
 up_hotlist_db_f1('$end_of_table', List) -> List;
 up_hotlist_db_f1({NodeId, Today}, List) ->
     NList = case ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}) of
-        [#todayhot_nodes_hotlist{node={NodeId, Today}, news=TodayNewsL}] ->
+        [#todayhot_node_news{node={NodeId, Today}, news=TodayNewsL}] ->
             [NodeId, Today, util:term_to_bitstring(TodayNewsL) | List];
         _ ->
             List

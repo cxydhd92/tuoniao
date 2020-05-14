@@ -128,9 +128,17 @@ term_to_bitstring(T) ->
     list_to_bitstring(NT).
 
 bitstring_to_term(BT) ->
-    {ok,Tokens,_} = erl_scan:string(bitstring_to_list(BT)++"."),
-    {ok,Term} = erl_parse:parse_term(Tokens),
-    Term.
+    case erl_scan:string(bitstring_to_list(BT)++".") of
+        {ok,Tokens,_} ->
+            case erl_parse:parse_term(Tokens) of
+                {ok,Term}  ->     
+                    Term;
+                Err ->
+                    Err
+            end;
+        {error, Err, _} ->
+            {error, Err}
+    end.
 
 fbin(Bin, Args) ->
     list_to_binary(io_lib:format(Bin, Args)).

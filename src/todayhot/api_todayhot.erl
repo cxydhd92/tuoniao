@@ -16,9 +16,9 @@ insert_new_hot(_Class, NodeId, NewsL) ->
 	Today = util:today(),
 	case ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}) of
 		[TNode] ->
-			ets:insert(?ETS_TODAYHOT_HOTLIST, TNode#todayhot_nodes_hotlist{news = NewsL});
+			ets:insert(?ETS_TODAYHOT_HOTLIST, TNode#todayhot_node_news{news = NewsL});
 		_ -> 
-			ets:insert(?ETS_TODAYHOT_HOTLIST, #todayhot_nodes_hotlist{node={NodeId,Today}, news = NewsL})
+			ets:insert(?ETS_TODAYHOT_HOTLIST, #todayhot_node_news{node={NodeId,Today}, news = NewsL})
 	end.
 
 

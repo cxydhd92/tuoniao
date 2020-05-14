@@ -636,6 +636,98 @@ get(20023) ->
 		json_data = <<"{\"nav\"((.|\n)*?)\"}]}"/utf8>>
 	};
 
+get(20024) ->
+	#cfg_news_source{
+		source_id = 20024,
+		class = 2,
+		sub_class = 1,
+		name = <<"新浪科技.最新"/utf8>>,
+		icon_name = <<"sina"/utf8>>,
+		url = <<"https://feed.mix.sina.com.cn/api/roll/get?pageid=372&lid=2431&k=&num=50&page=1"/utf8>>,
+		type = 1,
+		is_top = 0,
+		link_pre = <<""/utf8>>,
+		data = <<"result|data"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"wapurl"/utf8>>,
+		desc = <<"summary"/utf8>>,
+		author = <<"author"/utf8>>,
+		img = <<"img|u"/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"ctime"/utf8>>,
+		time_type = 1
+	};
+
+get(20025) ->
+	#cfg_news_source{
+		source_id = 20025,
+		class = 2,
+		sub_class = 1,
+		name = <<"新浪科技.热榜"/utf8>>,
+		icon_name = <<"sina"/utf8>>,
+		url = <<"https://tech.sina.com.cn"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"<ul class=\"rank-con\" id=\"rcon1\">([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20026) ->
+	#cfg_news_source{
+		source_id = 20026,
+		class = 2,
+		sub_class = 1,
+		name = <<"雷科技.最新"/utf8>>,
+		icon_name = <<"leikeji"/utf8>>,
+		url = <<"https://www.leikeji.com"/utf8>>,
+		type = 2,
+		is_top = 0,
+		link_pre = <<"https://www.leikeji.com"/utf8>>,
+		data = <<"<div class=\"feed-list\">([\\s\\S]+?)>更多</a>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<h2><a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"<h2><a[^>]+?href=\"([^\"]+?)\""/utf8>>,
+		desc = <<"<p class=\"item-desc\">([\\s\\S]+?)</p>"/utf8>>,
+		author = <<"<div class=\"user-info\"><a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		img = <<"data-original=\"([^\"]+?)\""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20027) ->
+	#cfg_news_source{
+		source_id = 20027,
+		class = 2,
+		sub_class = 1,
+		name = <<"雷科技.热榜"/utf8>>,
+		icon_name = <<"leikeji"/utf8>>,
+		url = <<"https://www.leikeji.com"/utf8>>,
+		type = 2,
+		is_top = 0,
+		link_pre = <<"https://www.leikeji.com"/utf8>>,
+		data = <<"<ul class=\"aside-article-list\">([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<h3>([\\s\\S]+?)</h3>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<"data-original=\"([^\"]+?)\""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
 get(60001) ->
 	#cfg_news_source{
 		source_id = 60001,
@@ -738,6 +830,10 @@ list_key() ->
 		20021,
 		20022,
 		20023,
+		20024,
+		20025,
+		20026,
+		20027,
 		60001,
 		60002,
 		110001
@@ -746,7 +842,7 @@ news_source_class(1) ->
 	[10001,10002,10003,10004];
 
 news_source_class(2) ->
-	[20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023];
+	[20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,20027];
 
 news_source_class(6) ->
 	[60001,60002];

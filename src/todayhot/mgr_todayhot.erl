@@ -53,7 +53,7 @@ init(_Args) ->
 	ets:new(?ETS_TODAYHOT, [named_table, {keypos, #todayhot_nodes.node_id}]),
 	ets:new(?ETS_TODAYHOT_NEWS, [named_table, {keypos, #todayhot_node_news.node}]),
 	ets:new(?ETS_TODAYHOT_TODAY, [named_table, {keypos, #todayhot_node_news.node}]),
-	ets:new(?ETS_TODAYHOT_HOTLIST, [named_table, {keypos, #todayhot_nodes_hotlist.node}, public]),
+	ets:new(?ETS_TODAYHOT_HOTLIST, [named_table, {keypos, #todayhot_node_news.node}, public]),
     {Nodes,Data,TodayData, HotList} = dao_todayhot:load(),
     MaxId = dao_todayhot:load_sys_id(),
 	ets:insert(?ETS_TODAYHOT, Nodes),
