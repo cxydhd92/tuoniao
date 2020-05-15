@@ -59,7 +59,7 @@ get(10002) ->
 get(10003) ->
 	#cfg_news_source{
 		source_id = 10003,
-		class = 11,
+		class = 1,
 		sub_class = 3,
 		name = <<"今日头条.热榜"/utf8>>,
 		icon_name = <<"toutiao"/utf8>>,
@@ -743,7 +743,7 @@ get(60001) ->
 		container = <<"target"/utf8>>,
 		title = <<"titleArea|text"/utf8>>,
 		link_a = <<"link|url"/utf8>>,
-		desc = <<"excerptArea|text"/utf8>>,
+		desc = <<""/utf8>>,
 		author = <<""/utf8>>,
 		img = <<"imageArea|url"/utf8>>,
 		count = <<"metricsArea|text"/utf8>>,
@@ -798,6 +798,53 @@ get(110001) ->
 		time_type = 0
 	};
 
+get(110002) ->
+	#cfg_news_source{
+		source_id = 110002,
+		class = 11,
+		sub_class = 1,
+		name = <<"百度.热榜"/utf8>>,
+		icon_name = <<"baidu"/utf8>>,
+		url = <<"https://www.baidu.com"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"\"pure_title\":\\s*\"([^\"]+?)\""/utf8>>,
+		link_a = <<"\"linkurl\":\\s*\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<"\"heat_score\": \"([^\"]+?)\""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+% get(110003) ->
+% 	#cfg_news_source{
+% 		source_id = 110003,
+% 		class = 11,
+% 		sub_class = 1,
+% 		name = <<"头条搜索.热搜"/utf8>>,
+% 		icon_name = <<"baidu"/utf8>>,
+% 		url = <<"https://so.toutiao.com/api/suggest_words/?business_id=10017"/utf8>>,
+% 		type = 1,
+% 		is_top = 1,
+% 		link_pre = <<"https://so.toutiao.com/search/?keyword="/utf8>>,
+% 		data = <<"data|words"/utf8>>,
+% 		container = <<""/utf8>>,
+% 		title = <<"pure_title"/utf8>>,
+% 		link_a = <<"linkurl"/utf8>>,
+% 		desc = <<""/utf8>>,
+% 		author = <<""/utf8>>,
+% 		img = <<""/utf8>>,
+% 		count = <<"heat_score"/utf8>>,
+% 		time = <<""/utf8>>,
+% 		time_type = 0,
+% 		json_data = <<"{\"banner\"((.|\n)*?)}]}"/utf8>>
+% 	};
+
 get(_Id) -> 
 	false.
 
@@ -836,7 +883,8 @@ list_key() ->
 		20027,
 		60001,
 		60002,
-		110001
+		110001,
+		110002
 	].
 news_source_class(1) ->
 	[10001,10002,10003,10004];
@@ -848,7 +896,7 @@ news_source_class(6) ->
 	[60001,60002];
 
 news_source_class(11) ->
-	[110001, 10003];
+	[110001,110002];
 
 news_source_class(_) -> []. 
 

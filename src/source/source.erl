@@ -287,6 +287,7 @@ do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 do_start_spider_html_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, json_data=DataF}, TodayData, Now) ->
 	case ibrowse:send_req(?b2l(Url), [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
+			?IF(SourceId==110002, ?INFO("Body~w DataF~ts",[length(Body), DataF]), ignored),
 			case catch re:run(Body, DataF, [{capture, first, list}, global, unicode]) of
 		        {_, RetJsonStr} ->
 		        	BodyJsonBin = list_to_binary(RetJsonStr),
@@ -296,8 +297,9 @@ do_start_spider_html_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, 
 					?IF(NewHotList=/=[], api_todayhot:insert_new_hot(Class, SourceId, lists:reverse(NewHotList)), ignored),
 					?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
 					NTodayData;
-		        _ ->
-		            {[], Now}
+		        _Err ->
+		        	?ERR("fail ~w", [ _Err]),
+		            TodayData
 		    end;
 		_Err ->
 			?ERR("Url ~ts fail ~w", [Url, _Err]),
