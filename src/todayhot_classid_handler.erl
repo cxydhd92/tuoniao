@@ -1,9 +1,11 @@
+%% 获取分类接口
 -module(todayhot_classid_handler).
  
 -export([init/2]).
 
  -include("common.hrl").
  -include("todayhot.hrl").
+ -include("cfg_news_class.hrl").
 init(Req0, State) ->
 	Method = cowboy_req:method(Req0),
 	% ?INFO(" Req0~w	",[Req0]),
@@ -12,13 +14,13 @@ init(Req0, State) ->
 
 handle(<<"GET">>, Req) ->
 	Fun = fun(ClassId, Acc) ->
-				ClassName = api_todayhot:get_class_name(ClassId),
+				#cfg_news_class{id = ClassId, name = ClassName} = cfg_news_class:get(ClassId),
 				[[{class_id, ClassId},{class_name, ClassName}]|Acc]
 		end,
-	Datas = lists:foldl(Fun, [], ?todayhot_class_list),
-	Reply = jsx:encode(Datas),
+	Datas = lists:foldl(Fun, [], cfg_news_class:list_key()),
+	Reply = jsx:encode([{data, Datas}]),
 	cowboy_req:reply(200, #{
-		<<"content-type">> => <<"text/plain; charset=utf-8">>
+		<<"content-type">> => <<"application/json; charset=utf-8">>
 	}, Reply, Req);
 handle(_, Req) ->
 	%% Method not allowed.

@@ -264,8 +264,8 @@ do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 		{ok, "200", _ResponseHeaders, Body} ->
 			#cfg_news_source{data=Data, container=ContainerF, title=TitleF, link_a=LinkA,
 			desc=DescF, author=AuthorF, img=ImgF, count=CountF, time=TimeF} = Cfg,
-			{_, Container} = ?IF(Data=:=<<"">>, {ok, Body}, re:run(Body, Data, [{capture, all_but_first, binary}, global])),
-			{_, Item} = ?IF(ContainerF=:=<<"">>, {ok, Container}, re:run(Container, ContainerF, [{capture, all_but_first, binary}, global])),
+			{_, Container} = ?IF(Data=:=<<"">>, {ok, Body}, re:run(Body, Data, [{capture, first, binary}, global])),
+			{_, Item} = ?IF(ContainerF=:=<<"">>, {ok, Container}, re:run(Container, ContainerF, [{capture, first, binary}, global])),
 			{_, ItemTitleL} = re:run(Item, TitleF, [{capture, all_but_first, binary}, global]),
 			{_, ItemLinkAL} = re:run(Item, LinkA, [{capture, all_but_first, binary}, global]),
 			ItemDescL = get_html_data(DescF, Item),
@@ -391,8 +391,9 @@ get_data_f1([], Datas, _) -> Datas;
 get_data_f1([Data|L], Body, Default) ->
 	case proplists:get_value(?l2b(Data), Body) of
 		DataS when DataS =/= undefined ->
-			NDataS = case is_list(DataS) of
-				true -> DataS;
+			NDataS = case DataS of
+				[DataL] when is_list(DataL) -> DataL;
+				[_|_] -> DataS;
 				_ ->
 					case catch jsx:decode(DataS) of
 						JDataS when is_list(JDataS) ->

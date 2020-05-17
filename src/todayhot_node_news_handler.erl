@@ -4,6 +4,8 @@
 
 -include("common.hrl").
 -include("todayhot.hrl").
+-include("cfg_news_source.hrl").
+
 init(Req0, State) ->
 	Method = cowboy_req:method(Req0),
 	?INFO(" Method~w	",[Method]),
@@ -26,33 +28,52 @@ handle(Param, Req) ->
 			cowboy_req:reply(405, Req)
 	end.
 
-get_page_news(NodeId, Today) ->
-	Node = ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}),
-	NNewsL = case Node of
-		[#todayhot_node_news{news= NewsL}] ->	NewsL;
+get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero, Today) ->
+	EtsName = ?IF(Today=:=TimeZero, ?ETS_TODAYHOT_TODAY, ?ETS_TODAYHOT_NEWS),
+	{TodayNewsL, IsDone} = do_get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero, EtsName),
+	{lists:keysort(#todayhot_news.id, TodayNewsL), IsDone} .
+
+do_get_page_news(MinId, _ClassId, NodeId, PageSize, TimeZero, EtsName) ->	
+	NNewsL = case ets:lookup(EtsName, {NodeId, TimeZero}) of
+		[#todayhot_node_news{news= NewsL}] -> NewsL;
 		_ -> []
 	end,
-	lists:reverse(NNewsL).
+	SortNewsL = lists:reverse(lists:keysort(#todayhot_news.id, NNewsL)),
+	{PageNewsL, IsDone} = get_class_news(SortNewsL, MinId, PageSize, []),
+	{PageNewsL, IsDone}.
+
+get_class_news([], _, _, NewsL) -> {NewsL, true};
+get_class_news(_, _, 0, NewsL) -> {NewsL, false};
+get_class_news([TN=#todayhot_news{id = Id}|SortNewsL], MinId, PageSize, NewsL) when MinId=:=0 orelse Id < MinId ->
+	get_class_news(SortNewsL, MinId, PageSize-1, [TN|NewsL]);
+get_class_news([_|SortNewsL], MinId, PageSize, NewsL) ->
+	get_class_news(SortNewsL, MinId, PageSize, NewsL).
 
 do_handle([], Req) ->
 	{ok, cowboy_req:reply(400, [], <<"Missing echo parameter.">>, Req)};
 do_handle(PostVals, Req) ->
-	ClassId = ?l2i(?b2l(proplists:get_value(<<"classId">>, PostVals, <<"1">>))),
-	NodeId = ?l2i(?b2l(proplists:get_value(<<"nodeId">>, PostVals, <<"0">>))),
-	Today = util:today(),
-	?INFO("ClassId ~w NodeId ~w ",[ClassId, NodeId]),
-	case is_integer(ClassId) andalso is_integer(NodeId) of
-		true when ClassId > 0 andalso NodeId > 0 ->
-			PageNewsL = get_page_news(NodeId, Today),
-			Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, sub_news=[#todayhot_sub_news{title=Title,url=Url, source=Source}|_]}, Acc) ->
-				{NodeName, _} = api_todayhot:get_node_name(NodeId),
+	ClassId = ?l2i(?b2l(proplists:get_value(<<"class_id">>, PostVals, <<"1">>))),
+	NodeId = ?l2i(?b2l(proplists:get_value(<<"node_id">>, PostVals, <<"0">>))),
+	MinId = ?l2i(?b2l(proplists:get_value(<<"min_id">>, PostVals, <<"0">>))),
+	PageSize = ?l2i(?b2l(proplists:get_value(<<"page_size">>, PostVals, <<"50">>))),
+	TimeZero = ?l2i(?b2l(proplists:get_value(<<"time">>, PostVals, <<"0">>))),
+
+	?INFO("ClassId ~w MinId ~w PageSize ~w",[ClassId, MinId, PageSize]),
+	case is_integer(NodeId) andalso is_integer(ClassId) andalso is_integer(MinId) andalso is_integer(PageSize) andalso is_integer(TimeZero) of
+		true when ClassId > 0 andalso PageSize > 0 andalso NodeId > 0 ->
+			Today = util:today(),
+			NTimeZero = ?IF(TimeZero =:= 0, Today, TimeZero), 
+			{PageNewsL=[#todayhot_news{id=NId}|_], IsDone} = get_page_news(MinId, ClassId, NodeId, PageSize, NTimeZero, Today),
+			Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
+				#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
 				[[{id, Id},{node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
 			end,
 			NNewsL = lists:foldl(Fun, [], PageNewsL),
 			% Data = [{data, NNewsL}],
-			?INFO("NNewsL~w", [NNewsL]),
-			Reply = jsx:encode(NNewsL),
-			?INFO("Reply ~w",[Reply]),
+			?INFO("NNewsL~w", [length(NNewsL)]),
+			NextTime = ?IF(IsDone, NTimeZero-86400, NTimeZero), 
+			Reply = jsx:encode([{data, NNewsL}, {next_time, NextTime}, {next_id, NId}]),
+			% ?INFO("Reply ~w",[Reply]),
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
 		    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),

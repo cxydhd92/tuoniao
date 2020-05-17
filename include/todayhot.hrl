@@ -84,14 +84,13 @@
     ,time = 0     %% 添加时间
 }).
 
-
-
 -record(todayhot_nodes, {
     node_id = 0 
     ,node_name    %% 节点名
     ,count = 0    %% 订阅数
     ,add_time = 0    
     ,users = []    %% 所属用户列表
+    ,time_list = []  %% 时间戳列表
 }).
 
 -record(todayhot_node_news, {

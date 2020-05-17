@@ -14,17 +14,21 @@ test_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, Toda
 			#cfg_news_source{data=Data, container=ContainerF, title=TitleF, link_a=LinkA,
 			desc=DescF, author=AuthorF, img=ImgF, count=CountF, time=TimeF} = Cfg,
 			?INFO("xxxxxxBody~w",[length(Body)]),
-			{_, Container} = ?IF(Data=:=<<"">>, {ok, Body}, re:run(Body, Data, [{capture, all_but_first, binary}, global])),
+			{_, Container} = ?IF(Data=:=<<"">>, {ok, Body}, re:run(Body, Data, [{capture, first, binary}, global])),
 			?INFO("xxxxxx~ts",[Container]),
-			{_, Item} = ?IF(ContainerF=:=<<"">>, {ok, Container}, re:run(Container, ContainerF, [{capture, all_but_first, binary}, global])),
+
+			{_, Item} = ?IF(ContainerF=:=<<"">>, {ok, Container}, re:run(Container, ContainerF, [{capture, first, binary}, global])),
 			{_, ItemTitleL} = re:run(Item, TitleF, [{capture, all_but_first, binary}, global]),
 			{_, ItemLinkAL} = re:run(Item, LinkA, [{capture, all_but_first, binary}, global]),
-			?INFO("ItemTitleL~w",[ItemTitleL]);
-			% {NNews, NTodayData, NewHotList} = do_parse_html(Cfg, TodayData, [], [], Now, ItemTitleL, ItemLinkAL, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCountFL, ItemTimeFL),
-			% ?IF(length(NNews)>0, mgr_todayhot:send({up_news, Class, SourceId, NNews, Now}), ignored),
-			% ?IF(NewHotList=/=[], api_todayhot:insert_new_hot(Class, SourceId, lists:reverse(NewHotList)), ignored),
-			% ?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
-			% NTodayData;
+			?INFO("ItemLinkAL ~w",[length(ItemLinkAL)]),
+			Fun = fun([Link]) ->
+				?INFO("ItemLinkAL ~ts",[Link])
+			end,
+			lists:foreach(Fun, ItemLinkAL),
+			Fun1 = fun([Title]) ->
+				?INFO("ItemLinkAL ~ts",[Title])
+			end,
+			lists:foreach(Fun1, ItemTitleL);
 		_Err ->
 			?ERR("Url ~ts fail ~w", [Url, _Err]),
 			ok
@@ -48,8 +52,46 @@ test() ->
     end,
 	ok.
 
+test_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url,head=Head, data=Data}, TodayData, Now) ->
+    case ibrowse:send_req(?b2l(Url), Head++[{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+		{ok, "200", _ResponseHeaders, ResponseBody} ->
+			BodyJsonBin = list_to_binary(ResponseBody),
+			BodyTerm = jsx:decode(BodyJsonBin),
+			DataL = get_data(Data, BodyTerm, []),
+			?INFO("DataL ~ts", [DataL]);
+		_Err ->
+			?ERR("Url ~ts fail ~w", [Url, _Err]),
+			TodayData
+	end.
+
+get_data(<<"">>, _Body, Default) -> Default;
+get_data(Data, Body, Default) ->
+	DataStr = ?b2l(Data),
+	DataL = string:tokens(DataStr, "|"),
+	get_data_f1(DataL, Body, Default).
+
+get_data_f1([], Datas, _) -> Datas;
+get_data_f1([Data|L], Body, Default) ->
+	case proplists:get_value(?l2b(Data), Body) of
+		DataS when DataS =/= undefined ->
+			NDataS = case DataS of
+				[DataL] when is_list(DataL) -> DataL;
+				[_|_] -> DataS;
+				_ ->
+					case catch jsx:decode(DataS) of
+						JDataS when is_list(JDataS) ->
+							JDataS;
+						_ ->
+							DataS
+					end
+			end,
+			get_data_f1(L, NDataS, Default);
+		_ ->
+			Default
+	end.
+
 test_xml() ->
-	case ibrowse:send_req("https://rss.huxiu.com/", [], get) of
+	case ibrowse:send_req("https://rss. huxiu.com/", [], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
 			{XmlDoc, _B} = xmerl_scan:string(Body),
 			 Items = xmerl_xpath:string("/rss/channel/item",XmlDoc),  

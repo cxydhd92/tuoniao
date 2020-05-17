@@ -386,7 +386,7 @@ get(20013) ->
 		sub_class = 1,
 		name = <<"AppSolution.最新"/utf8>>,
 		icon_name = <<"ifanr"/utf8>>,
-		url = <<"https://sso.ifanr.com/api/v5/wp/article/?post_type=app&limit=1&offset=0"/utf8>>,
+		url = <<"https://sso.ifanr.com/api/v5/wp/article/?post_type=app&limit=2&offset=0"/utf8>>,
 		type = 1,
 		is_top = 0,
 		link_pre = <<""/utf8>>,
@@ -821,29 +821,97 @@ get(110002) ->
 		time_type = 0
 	};
 
-% get(110003) ->
-% 	#cfg_news_source{
-% 		source_id = 110003,
-% 		class = 11,
-% 		sub_class = 1,
-% 		name = <<"头条搜索.热搜"/utf8>>,
-% 		icon_name = <<"baidu"/utf8>>,
-% 		url = <<"https://so.toutiao.com/api/suggest_words/?business_id=10017"/utf8>>,
-% 		type = 1,
-% 		is_top = 1,
-% 		link_pre = <<"https://so.toutiao.com/search/?keyword="/utf8>>,
-% 		data = <<"data|words"/utf8>>,
-% 		container = <<""/utf8>>,
-% 		title = <<"pure_title"/utf8>>,
-% 		link_a = <<"linkurl"/utf8>>,
-% 		desc = <<""/utf8>>,
-% 		author = <<""/utf8>>,
-% 		img = <<""/utf8>>,
-% 		count = <<"heat_score"/utf8>>,
-% 		time = <<""/utf8>>,
-% 		time_type = 0,
-% 		json_data = <<"{\"banner\"((.|\n)*?)}]}"/utf8>>
-% 	};
+get(110003) ->
+	#cfg_news_source{
+		source_id = 110003,
+		class = 11,
+		sub_class = 1,
+		name = <<"头条搜索.热搜"/utf8>>,
+		icon_name = <<"baidu"/utf8>>,
+		url = <<"https://ib.snssdk.com/api/suggest_words/?business_id=10017"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<"https://so.toutiao.com/search/?keyword="/utf8>>,
+		data = <<"data|words"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"word"/utf8>>,
+		link_a = <<"word"/utf8>>,
+		desc = <<""/utf8>>, 
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<"params|fake_click_cnt"/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(110004) ->
+	#cfg_news_source{
+		source_id = 110004,
+		class = 11,
+		sub_class = 1,
+		name = <<"搜狗.热搜"/utf8>>,
+		icon_name = <<"sogou"/utf8>>,
+		url = <<"https://top.sogou.com/hot/shishi_1.html"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://so.toutiao.com/search/?keyword="/utf8>>,
+		data = <<"<ul class=\"pub-list\">([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<p class=\"[^\"]+?\"><a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"<p class=\"[^\"]+?\"><a href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>, 
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(110005) ->
+	#cfg_news_source{
+		source_id = 110005,
+		class = 11,
+		sub_class = 1,
+		name = <<"360搜索.热搜"/utf8>>,
+		icon_name = <<"360"/utf8>>,
+		url = <<"https://news.so.com/hotnews?src=onebox"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"<ul class=\"[\\s\\S]+?\">([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<span class=\"title\">([\\s\\S]+?)</span>"/utf8>>,
+		link_a = <<"href=\"([\\s\\S]+?)\""/utf8>>,
+		desc = <<""/utf8>>, 
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(110006) ->
+	#cfg_news_source{
+		source_id = 110006,
+		class = 11,
+		sub_class = 1,
+		name = <<"神马搜索.热搜"/utf8>>,
+		icon_name = <<"360"/utf8>>,
+		url = <<"https://m.sm.cn/s?q=神马新闻榜单"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://m.sm.cn/s?q="/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<span class=\"title-text\">([\\s\\S]+?)</span>"/utf8>>,
+		link_a = <<"<span class=\"title-text\">([\\s\\S]+?)</span>"/utf8>>,
+		desc = <<""/utf8>>, 
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
 
 get(_Id) -> 
 	false.
@@ -884,7 +952,11 @@ list_key() ->
 		60001,
 		60002,
 		110001,
-		110002
+		110002,
+		110003,
+		110004,
+		110005,
+		110006
 	].
 news_source_class(1) ->
 	[10001,10002,10003,10004];
@@ -896,7 +968,7 @@ news_source_class(6) ->
 	[60001,60002];
 
 news_source_class(11) ->
-	[110001,110002];
+	[110001,110002, 110003,110004,110005,110006];
 
 news_source_class(_) -> []. 
 
