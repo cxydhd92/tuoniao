@@ -102,6 +102,30 @@ get(10004) ->
 		time_type = 0
 	};
 
+get(10005) ->
+	#cfg_news_source{
+		source_id = 10005,
+		class = 1,
+		sub_class = 4,
+		name = <<"微信.24H热榜"/utf8>>,
+		icon_name = <<"wechat"/utf8>>,
+		url = <<"https://m.gsdata.cn/Mobile_Articles_wxarticle.html"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<p class=\"article__name\">([\\s\\S]+?)</p>"/utf8>>,
+		link_a = <<"url=([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"<span class=\"r from\">([\\s\\S]+?)</span>"/utf8>>,
+		img = <<""/utf8>>,
+		count = <<"<span class=\"l see\"><i></i>([\\s\\S]+?)\\+</span>"/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+
 get(20001) ->
 	#cfg_news_source{
 		source_id = 20001,
@@ -922,6 +946,7 @@ list_key() ->
 		10002,
 		10003,
 		10004,
+		10005,
 		20001,
 		20002,
 		20003,
@@ -959,7 +984,7 @@ list_key() ->
 		110006
 	].
 news_source_class(1) ->
-	[10001,10002,10003,10004];
+	[10001,10002,10003,10004,10005];
 
 news_source_class(2) ->
 	[20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,20027];
