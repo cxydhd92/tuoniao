@@ -192,7 +192,7 @@ is_same_title_f1(Title, CTitle) ->
 is_same_title_f2([], _UCTitle, SameNum) ->
 	SameNum;
 is_same_title_f2([U|T], UCTitle, SameNum) ->
-	case lists:member(U, UCTitle) of
+	case lists:member(U, UCTitle) andalso  not lists:member(U, ?REMOVE_CHAR) of
 		true -> is_same_title_f2(T, lists:delete(U, UCTitle), SameNum+1);
 		_ -> is_same_title_f2(T, UCTitle, SameNum)
 	end.

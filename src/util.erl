@@ -6,6 +6,7 @@
 date_format/2
 ,ceil/1
 ,today/1
+,timestamp_to_datetime1/1
 ]).
 
 get_month(MonthStr) ->
@@ -102,7 +103,7 @@ datetime_to_timestamp({{_Y, _M, _D}, {_H, _Mi, _S}} = Date) ->
         calendar:datetime_to_gregorian_seconds(LocalTime) + 
         calendar:datetime_to_gregorian_seconds(UTCTime).
  
-% 时间戳转时间
+% 时间戳转时间{{_Y, _M, _D}, {_H, _Mi, _S}}
 timestamp_to_datetime(Seconds) ->
     Now = os:timestamp(),
     LocalTime = calendar:now_to_local_time(Now),
@@ -112,6 +113,13 @@ timestamp_to_datetime(Seconds) ->
     %% 时区修正
     calendar:datetime_to_gregorian_seconds(LocalTime) - calendar:datetime_to_gregorian_seconds(UTCTime),
     calendar:gregorian_seconds_to_datetime(Second1).
+
+%% 20201102
+timestamp_to_datetime1(TimeStamp) ->
+    {{Year,Month,Day}, _} = timestamp_to_datetime(TimeStamp),
+    NMonth = ?IF(Month<10, "0"++?i2l(Month), ?i2l(Month)),
+    NDay = ?IF(Day<10, "0"++?i2l(Day), ?i2l(Day)),
+    ?i2l(Year) ++ NMonth ++ NDay.
 
 %% 时间格式化
 format_utc_timestamp() ->

@@ -84,22 +84,23 @@ get(10004) ->
 		source_id = 10004,
 		class = 1,
 		sub_class = 4,
-		name = <<"网易新闻.热榜"/utf8>>,
-		icon_name = <<"163"/utf8>>,
-		url = <<""/utf8>>,
-		type = 0,
-		is_top = 0,
+		name = <<"新浪新闻.总热榜"/utf8>>,
+		icon_name = <<"sina"/utf8>>,
+		url = <<"http://top.news.sina.com.cn/ws/GetTopDataList.php?top_type=day&top_cat=www_www_all_suda_suda&top_show_num=50&top_order=DESC&js_var=all_1_data01&top_time="/utf8>>,
+		type = 4,
+		is_top = 1,
 		link_pre = <<""/utf8>>,
-		data = <<""/utf8>>,
+		data = <<"data"/utf8>>,
 		container = <<""/utf8>>,
-		title = <<""/utf8>>,
-		link_a = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
 		desc = <<""/utf8>>,
 		author = <<""/utf8>>,
 		img = <<""/utf8>>,
 		count = <<""/utf8>>,
-		time = <<""/utf8>>,
-		time_type = 0
+		time = <<"time"/utf8>>,
+		time_type = 4,
+		json_data = <<"{\"conf\":((.|\n)*?)}]}"/utf8>>
 	};
 
 get(10005) ->
@@ -125,6 +126,98 @@ get(10005) ->
 		time_type = 0
 	};
 
+get(10006) ->
+	#cfg_news_source{
+		source_id = 10006,
+		class = 1,
+		sub_class = 4,
+		name = <<"人民网.观点24H热榜"/utf8>>,
+		icon_name = <<"people"/utf8>>,
+		url = <<""/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"http://opinion.people.com.cn"/utf8>>,
+		data = <<"<ol>([\\s\\S]+?)</ol>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(10007) ->
+	#cfg_news_source{
+		source_id = 10007,
+		class = 1,
+		sub_class = 4,
+		name = <<"微信-时事.24H热榜"/utf8>>,
+		icon_name = <<"wechat"/utf8>>,
+		url = <<"https://m.gsdata.cn/Mobile_Articles_wxarticle.html?post_time=2&types=时事&industry=all&industry_type=&industry2=全部"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<p class=\"article__name\">([\\s\\S]+?)</p>"/utf8>>,
+		link_a = <<"url=([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"<span class=\"r from\">([\\s\\S]+?)</span>"/utf8>>,
+		img = <<""/utf8>>,
+		count = <<"<span class=\"l see\"><i></i>([\\s\\S]+?)\\+</span>"/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(10008) ->
+	#cfg_news_source{
+		source_id = 10008,
+		class = 1,
+		sub_class = 4, 
+		name = <<"新浪新闻.社会热榜"/utf8>>,
+		icon_name = <<"sina"/utf8>>,
+		url = <<"http://top.news.sina.com.cn/ws/GetTopDataList.php?top_type=day&top_cat=news_society_suda&top_show_num=20&top_order=DESC&js_var=news_&top_time="/utf8>>,
+		type = 4,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"data"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"time"/utf8>>,
+		time_type = 4,
+		json_data = <<"{\"conf\":((.|\n)*?)}]}"/utf8>>
+	};
+
+get(10009) ->
+	#cfg_news_source{
+		source_id = 10009,
+		class = 1,
+		sub_class = 4, 
+		name = <<"梨视频.总榜"/utf8>>,
+		icon_name = <<"pearvideo"/utf8>>,
+		url = <<"https://www.pearvideo.com/popular_loading.jsp?reqType=1&categoryId=&start=0&sort=0"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://www.pearvideo.com/video_"/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<h2[^>]+?>([\\s\\S]+?)</h2>"/utf8>>,
+		link_a = <<"data-id=\"([^\"]+?)\""/utf8>>,
+		desc = <<"<p[^>]+?>([\\s\\S]+?)</p>"/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
 
 get(20001) ->
 	#cfg_news_source{
@@ -752,6 +845,169 @@ get(20027) ->
 		time_type = 0
 	};
 
+get(20028) ->
+	#cfg_news_source{
+		source_id = 20028,
+		class = 2,
+		sub_class = 4,
+		name = <<"微信-科技.24H热榜"/utf8>>,
+		icon_name = <<"wechat"/utf8>>,
+		url = <<"https://m.gsdata.cn/Mobile_Articles_wxarticle.html?post_time=2&types=科技&industry=all&industry_type=&industry2=全部"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<p class=\"article__name\">([\\s\\S]+?)</p>"/utf8>>,
+		link_a = <<"url=([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"<span class=\"r from\">([\\s\\S]+?)</span>"/utf8>>,
+		img = <<""/utf8>>,
+		count = <<"<span class=\"l see\"><i></i>([\\s\\S]+?)\\+</span>"/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(20029) ->
+	#cfg_news_source{
+		source_id = 20029,
+		class = 2,
+		sub_class = 4,
+		name = <<"梨视频.科技热榜"/utf8>>,
+		icon_name = <<"pearvideo"/utf8>>,
+		url = <<"https://www.pearvideo.com/popular_loading.jsp?reqType=1&categoryId=8&start=0&sort=0"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://www.pearvideo.com/video_"/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<h2[^>]+?>([\\s\\S]+?)</h2>"/utf8>>,
+		link_a = <<"data-id=\"([^\"]+?)\""/utf8>>,
+		desc = <<"<p[^>]+?>([\\s\\S]+?)</p>"/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(30001) ->
+	#cfg_news_source{
+		source_id = 30001,
+		class = 3,
+		sub_class = 4,
+		name = <<"微信娱乐.24H热榜"/utf8>>,
+		icon_name = <<"wechat"/utf8>>,
+		url = <<"https://m.gsdata.cn/Mobile_Articles_wxarticle.html?post_time=2&types=科技&industry=all&industry_type=&industry2=全部"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<p class=\"article__name\">([\\s\\S]+?)</p>"/utf8>>,
+		link_a = <<"url=([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"<span class=\"r from\">([\\s\\S]+?)</span>"/utf8>>,
+		img = <<""/utf8>>,
+		count = <<"<span class=\"l see\"><i></i>([\\s\\S]+?)\\+</span>"/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(30002) ->
+	#cfg_news_source{
+		source_id = 30002,
+		class = 3,
+		sub_class = 4,
+		name = <<"新浪娱乐.热榜"/utf8>>,
+		icon_name = <<"sina"/utf8>>,
+		url = <<"http://top.ent.sina.com.cn/ws/GetTopDataList.php?top_type=day&top_cat=ent_suda&top_show_num=20&top_order=DESC&js_var=channel_&top_time="/utf8>>,
+		type = 4,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"data"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"time"/utf8>>,
+		time_type = 4,
+		json_data = <<"{\"conf\":((.|\n)*?)}]}"/utf8>>
+	};
+
+get(30003) ->
+	#cfg_news_source{
+		source_id = 30003,
+		class = 3,
+		sub_class = 4,
+		name = <<"梨视频.娱乐热榜"/utf8>>,
+		icon_name = <<"pearvideo"/utf8>>,
+		url = <<"https://www.pearvideo.com/popular_loading.jsp?reqType=1&categoryId=4&start=0&sort=0"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://www.pearvideo.com/video_"/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<h2[^>]+?>([\\s\\S]+?)</h2>"/utf8>>,
+		link_a = <<"data-id=\"([^\"]+?)\""/utf8>>,
+		desc = <<"<p[^>]+?>([\\s\\S]+?)</p>"/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(50001) ->
+	#cfg_news_source{
+		source_id = 50001,
+		class = 5,
+		sub_class = 4,
+		name = <<"新浪财经.热榜"/utf8>>,
+		icon_name = <<"sina"/utf8>>,
+		url = <<"http://top.finance.sina.com.cn/ws/GetTopDataList.php?top_type=day&top_cat=finance_0_suda&top_show_num=20&top_order=DESC&js_var=channel_&top_time="/utf8>>,
+		type = 4,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"data"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"time"/utf8>>,
+		time_type = 4,
+		json_data = <<"{\"conf\":((.|\n)*?)}]}"/utf8>>
+	};
+
+get(50002) ->
+	#cfg_news_source{
+		source_id = 50002,
+		class = 5,
+		sub_class = 4,
+		name = <<"梨视频.体育热榜"/utf8>>,
+		icon_name = <<"pearvideo"/utf8>>,
+		url = <<"https://www.pearvideo.com/popular_loading.jsp?reqType=1&categoryId=3&start=0&sort=0"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://www.pearvideo.com/video_"/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<h2[^>]+?>([\\s\\S]+?)</h2>"/utf8>>,
+		link_a = <<"data-id=\"([^\"]+?)\""/utf8>>,
+		desc = <<"<p[^>]+?>([\\s\\S]+?)</p>"/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
 get(60001) ->
 	#cfg_news_source{
 		source_id = 60001,
@@ -794,6 +1050,53 @@ get(60002) ->
 		desc = <<""/utf8>>,
 		author = <<""/utf8>>,
 		img = <<"src=\"([^\"]+?)\""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(100001) ->
+	#cfg_news_source{
+		source_id = 100001,
+		class = 10,
+		sub_class = 4,
+		name = <<"新浪体育.热榜"/utf8>>,
+		icon_name = <<"sina"/utf8>>,
+		url = <<"http://top.sports.sina.com.cn/ws/GetTopDataList.php?top_type=day&top_cat=sports_suda&top_show_num=20&top_order=DESC&js_var=channel_&top_time="/utf8>>,
+		type = 4,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"data"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"time"/utf8>>,
+		time_type = 4,
+		json_data = <<"{\"conf\":((.|\n)*?)}]}"/utf8>>
+	};
+
+get(100002) ->
+	#cfg_news_source{
+		source_id = 100002,
+		class = 10,
+		sub_class = 4,
+		name = <<"梨视频.体育热榜"/utf8>>,
+		icon_name = <<"pearvideo"/utf8>>,
+		url = <<"https://www.pearvideo.com/popular_loading.jsp?reqType=1&categoryId=9&start=0&sort=0"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://www.pearvideo.com/video_"/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<h2[^>]+?>([\\s\\S]+?)</h2>"/utf8>>,
+		link_a = <<"data-id=\"([^\"]+?)\""/utf8>>,
+		desc = <<"<p[^>]+?>([\\s\\S]+?)</p>"/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
 		count = <<""/utf8>>,
 		time = <<""/utf8>>,
 		time_type = 0
@@ -947,6 +1250,10 @@ list_key() ->
 		10003,
 		10004,
 		10005,
+		10006,
+		10007,
+		10008,
+		10009,
 		20001,
 		20002,
 		20003,
@@ -974,8 +1281,17 @@ list_key() ->
 		20025,
 		20026,
 		20027,
+		20028,
+		20029,
+		30001,
+		30002,
+		30003,
+		50001,
+		50002,
 		60001,
 		60002,
+		100001,
+		100002,
 		110001,
 		110002,
 		110003,
@@ -984,13 +1300,22 @@ list_key() ->
 		110006
 	].
 news_source_class(1) ->
-	[10001,10002,10003,10004,10005];
+	[10002,10003,10004,10005,10006,10007,10008,10009];
 
 news_source_class(2) ->
-	[20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,20027];
+	[10001, 20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,20027,20028,20029];
+
+news_source_class(3) ->
+	[30001, 30002, 30003];
+
+news_source_class(5) ->
+	[50001, 50002];
 
 news_source_class(6) ->
 	[60001,60002];
+
+news_source_class(10) ->
+	[100001,100002];
 
 news_source_class(11) ->
 	[110001,110002, 110003,110004,110005,110006];

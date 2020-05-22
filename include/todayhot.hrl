@@ -76,6 +76,8 @@
 -define(ETS_TODAYHOT_TODAY, todayhot_today_ets). %%当天数据
 -define(ETS_TODAYHOT_HOTLIST, todayhot_hot_list_ets). %%当天最新榜单数据
 
+-define(REMOVE_CHAR, [$<, $>, $s, $p, $a, $n, $/, $b, $l, $u, $e,$", $c,$l]).
+
 -record(todayhot, {
     compre = []  %% 综合新闻
     ,tech = []   %% 科技新闻

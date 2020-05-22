@@ -285,7 +285,8 @@ do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
     end.
 
 do_start_spider_html_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, json_data=DataF}, TodayData, Now) ->
-	case ibrowse:send_req(?b2l(Url), [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+	NUrl = get_send_url(SourceId, Url, Now),
+	case ibrowse:send_req(NUrl, [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
 			?IF(SourceId==110002, ?INFO("Body~w DataF~ts",[length(Body), DataF]), ignored),
 			case catch re:run(Body, DataF, [{capture, first, list}, global, unicode]) of
@@ -325,8 +326,15 @@ new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCou
 	{Img, RtItemImgFL} = get_html_item(ItemImgFL),
 	{CountI, RtItemCountFL} = get_html_item(ItemCountFL),
 	NewTime = util:date_format(TimeType, TimeData),
-	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(LinkA)]),
+	NLinkA = build_link_a(LinkA),
+	TUrl = case catch re:run(NLinkA, "http", [{capture, first, list}, global, unicode]) of
+		        {match, _} ->
+		        	NLinkA;
+		        _Err ->
+		        	util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(LinkA)])
+		    end,
 	% Url = ?l2b(?Host ++ "/" ++ Param),
+	% ?IF(SourceId==10006, ?INFO("Title~ts",[Title]), ignored),
 	Count = parse_count(SourceId, CountI),
 	TNews = #todayhot_news{
 		class = Class,
@@ -335,9 +343,21 @@ new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCou
 	},
 	{TNews, RtItemDescL, RtItemAuthorFL, RtItemImgFL, RtItemCountFL, RtItemTimeL}.
 
+re_title(CTitle) ->
+	UCTitle = unicode:characters_to_list(CTitle),
+	Fun = fun(C, Acc) ->
+		case lists:member(C, [10,13,32]) of
+			true -> Acc;
+			_ -> Acc ++ [C]
+		end
+	end,
+	TL = lists:foldl(Fun, [], UCTitle),
+	unicode:characters_to_binary(TL).
+
 do_parse_html(_Cfg, TodayData, News, TopL, _Now, [], _, _, _, _, _, _) ->
 	{News, TodayData, TopL};
-do_parse_html(Cfg=#cfg_news_source{is_top = IsTop}, TodayData, News, TopL, Now, [[Title]|ItemTitleL], [[LinkA]|ItemLinkAL], ItemDescL, ItemAuthorFL, ItemImgFL, ItemCountFL, ItemTimeFL) ->
+do_parse_html(Cfg=#cfg_news_source{is_top = IsTop}, TodayData, News, TopL, Now, [[OTitle]|ItemTitleL], [[LinkA]|ItemLinkAL], ItemDescL, ItemAuthorFL, ItemImgFL, ItemCountFL, ItemTimeFL) ->
+	Title = re_title(OTitle),
 	{TNews, RtItemDescL, RtItemAuthorFL, RtItemImgFL, RtItemCountFL, RtItemTimeL} = 
 	new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCountFL, ItemTimeFL),				
 	case IsTop =:= ?true of
@@ -361,6 +381,8 @@ get_send_url(SourceId, Url, Now) ->
 	case SourceId of
 		10001 ->
 			?b2l(Url)++?i2l(Now)++".json";
+		_ when SourceId=:=10004;SourceId=:=10008 ->
+			?b2l(Url) ++ util:timestamp_to_datetime1(Now);
 		_ ->
 			?b2l(Url)
 	end.
