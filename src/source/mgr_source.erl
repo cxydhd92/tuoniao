@@ -58,12 +58,11 @@ init(_Args) ->
 
 alloc(State = #mgr_source{total_list = OldList, list = CfgList}) ->
 	Fun = fun(SourceId, {Acc1, Acc2}) ->
-		NAcc1 = case lists:member(SourceId, Acc2) of
-			true -> Acc1;
+		case lists:member(SourceId, Acc2) of
+			true -> {Acc1, Acc2};
 			_ ->
-				alloc(SourceId, Acc1)
-		end,
-		{NAcc1, [SourceId|Acc2]}
+				{alloc(SourceId, Acc1), [SourceId|Acc2]}
+		end
 	end,
 	{NCfgList, NTotalList} = lists:foldl(Fun, {CfgList, OldList}, cfg_news_source:list_key()),
 	State#mgr_source{total_list = NTotalList, list = NCfgList}.

@@ -24,7 +24,7 @@ get(3) ->
 	#cfg_news_class{
 		id = 3,
 		sort = 3,
-		name = <<"娱乐八卦"/utf8>>
+		name = <<"娱乐.搞笑"/utf8>>
 	};
 
 get(4) ->

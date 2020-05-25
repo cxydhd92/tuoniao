@@ -381,7 +381,7 @@ get_send_url(SourceId, Url, Now) ->
 	case SourceId of
 		10001 ->
 			?b2l(Url)++?i2l(Now)++".json";
-		_ when SourceId=:=10004;SourceId=:=10008 ->
+		_ when SourceId=:=10004;SourceId=:=10008;SourceId=:=30002;SourceId=:=50001;SourceId=:=100001 ->
 			?b2l(Url) ++ util:timestamp_to_datetime1(Now);
 		_ ->
 			?b2l(Url)
