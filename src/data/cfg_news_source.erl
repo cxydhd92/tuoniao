@@ -692,7 +692,7 @@ get(20021) ->
 		url = <<"https://36kr.com/information/web_news/latest"/utf8>>,
 		type = 4,
 		is_top = 0,
-		link_pre = <<""/utf8>>,
+		link_pre = <<"https://36kr.com/p/"/utf8>>,
 		data = <<"information|informationList|itemList"/utf8>>,
 		container = <<"templateMaterial"/utf8>>,
 		title = <<"widgetTitle"/utf8>>,
