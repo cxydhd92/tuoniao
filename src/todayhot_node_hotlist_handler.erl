@@ -51,9 +51,9 @@ do_handle(PostVals, Req) ->
 			PageNewsL = get_page_news(NodeId, NTimeZero),
 			Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, title=Title, url=Url, source=Source}, {Acc, Rank}) ->
 				NTitle = case Rank of
-					1 -> util:fbin(<<"~s~s"/utf8>>, [<<"<font color=\"red\">1. </font>">>, Title]);
-					2 -> util:fbin(<<"~s~s"/utf8>>, [<<"<font color=\"blue\">2. </font>">>, Title]);
-					3-> util:fbin(<<"~s~s"/utf8>>, [<<"<font color=\"green\">3. </font>">>, Title]);
+					1 -> util:fbin(<<"~s~s"/utf8>>, [<<"<font class=\"fwb\" color=\"red\">1. </font>">>, Title]);
+					2 -> util:fbin(<<"~s~s"/utf8>>, [<<"<font class=\"fwb\" color=\"blue\">2. </font>">>, Title]);
+					3-> util:fbin(<<"~s~s"/utf8>>, [<<"<font class=\"fwb\" color=\"green\">3. </font>">>, Title]);
 					_ -> util:fbin(<<"~w~s~s"/utf8>>, [Rank, <<". ">>, Title])
 				end,
 				{[[{id, Id},{abstract, Abs}, {title, NTitle}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc], Rank-1}
