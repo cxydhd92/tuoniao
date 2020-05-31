@@ -52,6 +52,13 @@ do_get_page_news(MinId, _ClassId, NodeId, PageSize, TimeZero, EtsName, HotNewsL)
 	{PageNewsL, IsDone} = get_class_news(SortNewsL, MinId, PageSize, [], HotNewsL),
 	{PageNewsL, IsDone}.
 
+get_next_time(TimeZero, _NodeId, ?false) -> TimeZero - 86400;
+get_next_time(TimeZero, NodeId, Num) when Num > 0->
+	case ets:lookup(?ETS_TODAYHOT_NEWS, {NodeId, TimeZero}) of
+		[_|_] -> TimeZero;
+		_ -> get_next_time(TimeZero-86400, NodeId, Num-1)
+	end.
+
 get_class_news([], _, _, NewsL, _) -> {NewsL, true};
 get_class_news(_, _, 0, NewsL, _) -> {NewsL, false};
 get_class_news([TN=#todayhot_news{id = Id}|SortNewsL], MinId, PageSize, NewsL, HotNewsL) when MinId=:=0 orelse Id < MinId ->
@@ -91,7 +98,7 @@ do_handle(PostVals, Req) ->
 			end,
 			% Data = [{data, NNewsL}],
 			% ?INFO("NNewsL~w", [length(NNewsL)]),
-			NextTime = ?IF(IsDone, NTimeZero-86400, NTimeZero), 
+			NextTime = ?IF(IsDone, get_next_time(NTimeZero-86400, NodeId, 30), NTimeZero), 
 			Reply = jsx:encode([{data, NNewsL}, {next_time, NextTime}, {next_id, NNId},{name, NodeName}]),
 			% ?INFO("Reply ~w",[Reply]),
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
