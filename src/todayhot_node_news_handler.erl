@@ -8,19 +8,19 @@
 
 init(Req0, State) ->
 	Method = cowboy_req:method(Req0),
-	?INFO(" Method~w	",[Method]),
+	% ?INFO(" Method~w	",[Method]),
 	Req1 = case Method of
 		<<"GET">> ->
 			Param = cowboy_req:parse_qs(Req0),
 			handle(Param, Req0);
 		_ ->
-			?INFO("Method~w",[Method]),
+			% ?INFO("Method~w",[Method]),
 			cowboy_req:reply(405, Req0)
 	end,
 	{ok, Req1, State}.
 
 handle(Param, Req) ->
-	?INFO("Param~w",[Param]),
+	% ?INFO("Param~w",[Param]),
 	case catch do_handle(Param, Req) of
 		{ok,  Reply} -> Reply;
 		_Err ->
@@ -29,25 +29,40 @@ handle(Param, Req) ->
 	end.
 
 get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero, Today) ->
-	EtsName = ?IF(Today=:=TimeZero, ?ETS_TODAYHOT_TODAY, ?ETS_TODAYHOT_NEWS),
-	{TodayNewsL, IsDone} = do_get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero, EtsName),
+	{EtsName, HotNewsL} = case Today=:=TimeZero of
+		true ->
+			Node = ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}),
+			NNewsL = case Node of
+				[#todayhot_node_news{news= NewsL}] ->	NewsL;
+				_ -> []
+			end,
+			{?ETS_TODAYHOT_TODAY, NNewsL};
+		_ ->
+			{?ETS_TODAYHOT_NEWS, []}
+	end,
+	{TodayNewsL, IsDone} = do_get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero, EtsName, HotNewsL),
 	{lists:keysort(#todayhot_news.id, TodayNewsL), IsDone} .
 
-do_get_page_news(MinId, _ClassId, NodeId, PageSize, TimeZero, EtsName) ->	
+do_get_page_news(MinId, _ClassId, NodeId, PageSize, TimeZero, EtsName, HotNewsL) ->	
 	NNewsL = case ets:lookup(EtsName, {NodeId, TimeZero}) of
-		[#todayhot_node_news{news= NewsL}] -> NewsL;
+		[#todayhot_node_news{news = NewsL}] -> NewsL;
 		_ -> []
 	end,
 	SortNewsL = lists:reverse(lists:keysort(#todayhot_news.id, NNewsL)),
-	{PageNewsL, IsDone} = get_class_news(SortNewsL, MinId, PageSize, []),
+	{PageNewsL, IsDone} = get_class_news(SortNewsL, MinId, PageSize, [], HotNewsL),
 	{PageNewsL, IsDone}.
 
-get_class_news([], _, _, NewsL) -> {NewsL, true};
-get_class_news(_, _, 0, NewsL) -> {NewsL, false};
-get_class_news([TN=#todayhot_news{id = Id}|SortNewsL], MinId, PageSize, NewsL) when MinId=:=0 orelse Id < MinId ->
-	get_class_news(SortNewsL, MinId, PageSize-1, [TN|NewsL]);
-get_class_news([_|SortNewsL], MinId, PageSize, NewsL) ->
-	get_class_news(SortNewsL, MinId, PageSize, NewsL).
+get_class_news([], _, _, NewsL, _) -> {NewsL, true};
+get_class_news(_, _, 0, NewsL, _) -> {NewsL, false};
+get_class_news([TN=#todayhot_news{id = Id}|SortNewsL], MinId, PageSize, NewsL, HotNewsL) when MinId=:=0 orelse Id < MinId ->
+	case lists:keymember(Id, #todayhot_news.id, HotNewsL) of
+		true ->
+			get_class_news(SortNewsL, MinId, PageSize, NewsL, HotNewsL);
+		_ ->
+			get_class_news(SortNewsL, MinId, PageSize-1, [TN|NewsL], HotNewsL)
+	end;
+get_class_news([_|SortNewsL], MinId, PageSize, NewsL, HotNewsL) ->
+	get_class_news(SortNewsL, MinId, PageSize, NewsL, HotNewsL).
 
 do_handle([], Req) ->
 	{ok, cowboy_req:reply(400, [], <<"Missing echo parameter.">>, Req)};
@@ -58,21 +73,26 @@ do_handle(PostVals, Req) ->
 	PageSize = ?l2i(?b2l(proplists:get_value(<<"page_size">>, PostVals, <<"50">>))),
 	TimeZero = ?l2i(?b2l(proplists:get_value(<<"time">>, PostVals, <<"0">>))),
 
-	?INFO("ClassId ~w MinId ~w PageSize ~w",[ClassId, MinId, PageSize]),
+	% ?INFO("ClassId ~w MinId ~w PageSize ~w",[ClassId, MinId, PageSize]),
 	case is_integer(NodeId) andalso is_integer(ClassId) andalso is_integer(MinId) andalso is_integer(PageSize) andalso is_integer(TimeZero) of
 		true when ClassId > 0 andalso PageSize > 0 andalso NodeId > 0 ->
 			Today = util:today(),
 			NTimeZero = ?IF(TimeZero =:= 0, Today, TimeZero), 
-			{PageNewsL=[#todayhot_news{id=NId}|_], IsDone} = get_page_news(MinId, ClassId, NodeId, PageSize, NTimeZero, Today),
-			Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
-				#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
-				[[{id, Id},{node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+			{PageNewsL, IsDone} = get_page_news(MinId, ClassId, NodeId, PageSize, NTimeZero, Today),
+			#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
+			{NNewsL, NNId} = case PageNewsL of
+				[#todayhot_news{id=NId}|_] ->
+					Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
+						[[{id, Id},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+					end,
+					{lists:foldl(Fun, [], PageNewsL), NId};
+				_ ->
+					{[], 0}
 			end,
-			NNewsL = lists:foldl(Fun, [], PageNewsL),
 			% Data = [{data, NNewsL}],
-			?INFO("NNewsL~w", [length(NNewsL)]),
+			% ?INFO("NNewsL~w", [length(NNewsL)]),
 			NextTime = ?IF(IsDone, NTimeZero-86400, NTimeZero), 
-			Reply = jsx:encode([{data, NNewsL}, {next_time, NextTime}, {next_id, NId}]),
+			Reply = jsx:encode([{data, NNewsL}, {next_time, NextTime}, {next_id, NNId},{name, NodeName}]),
 			% ?INFO("Reply ~w",[Reply]),
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),

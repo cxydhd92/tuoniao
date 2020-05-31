@@ -144,7 +144,7 @@ do_handle_info({add_source, SourceId, IsUser}, State=#source{list = List, titles
 	Today = util:today(),
 	News = api_todayhot:get_node_news_num(SourceId, Today, 100),
 	TitleL = [Title||#todayhot_news{title=Title}<-News],
-	?INFO("SourceId~w titlelen ~w end",[SourceId, length(TitleL)]),
+	?INFO("add_source SourceId~w titlelen ~w end",[SourceId, length(TitleL)]),
 	{noreply, State#source{list = NList, titles = [{SourceId, TitleL}|lists:keydelete(SourceId, 1, ATitleL)]}};
 do_handle_info(start_spider, State=#source{list = List, titles = TodayData}) ->
 	Now = util:now(),
@@ -259,8 +259,8 @@ do_start_spider_rss(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = 
 			TodayData
     end.
 
-do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, TodayData, Now) ->
-	case ibrowse:send_req(?b2l(Url), [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, head = Head}, TodayData, Now) ->
+	case ibrowse:send_req(?b2l(Url), Head++[{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
 			#cfg_news_source{data=Data, container=ContainerF, title=TitleF, link_a=LinkA,
 			desc=DescF, author=AuthorF, img=ImgF, count=CountF, time=TimeF} = Cfg,
@@ -284,9 +284,9 @@ do_start_spider_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 			TodayData
     end.
 
-do_start_spider_html_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, json_data=DataF}, TodayData, Now) ->
+do_start_spider_html_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, json_data=DataF, head=Head}, TodayData, Now) ->
 	NUrl = get_send_url(SourceId, Url, Now),
-	case ibrowse:send_req(NUrl, [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+	case ibrowse:send_req(NUrl, Head++[{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
 			?IF(SourceId==110002, ?INFO("Body~w DataF~ts",[length(Body), DataF]), ignored),
 			case catch re:run(Body, DataF, [{capture, first, list}, global, unicode]) of
@@ -326,16 +326,17 @@ new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCou
 	{Img, RtItemImgFL} = get_html_item(ItemImgFL),
 	{CountI, RtItemCountFL} = get_html_item(ItemCountFL),
 	NewTime = util:date_format(TimeType, TimeData),
-	NLinkA = build_link_a(LinkA),
+	NLinkA = build_link_a(SourceId,LinkA),
 	TUrl = case catch re:run(NLinkA, "http", [{capture, first, list}, global, unicode]) of
 		        {match, _} ->
 		        	NLinkA;
 		        _Err ->
-		        	util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(LinkA)])
+		        	util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(SourceId,LinkA)])
 		    end,
 	% Url = ?l2b(?Host ++ "/" ++ Param),
 	% ?IF(SourceId==10006, ?INFO("Title~ts",[Title]), ignored),
 	Count = parse_count(SourceId, CountI),
+	% ?INFO("Title~ts",[Title]),
 	TNews = #todayhot_news{
 		class = Class,
 		node_id = SourceId, title = Title, url=TUrl, news_time=NewTime, source=Source, count=Count
@@ -431,7 +432,7 @@ get_data_f1([Data|L], Body, Default) ->
 
 parse_body(Cfg, Body, Now, TodayData) ->
 	#cfg_news_source{data=Data} = Cfg,
-	case get_data(Data, Body, []) of
+	case get_data(Data, Body, Body) of
 		NewData when is_list(NewData) ->
 			do_parse_data(Cfg, NewData, [], Now, TodayData, []);
 		_ ->
@@ -452,9 +453,11 @@ parse_count(_, Count) ->
 			Count
 	end.
 
-build_link_a(LinkA) when is_integer(LinkA) ->
+build_link_a(_SourceId, LinkA) when is_integer(LinkA) ->
 	?l2b(?i2l(LinkA));
-build_link_a(LinkA)  ->
+build_link_a(SourceId, LinkA)  when SourceId=:=10003 orelse SourceId =:= 110001->
+	util:fbin(<<"~s~s"/utf8>>, [LinkA, <<"%2523">>]);
+build_link_a(_SourceId, LinkA) ->
 	LinkA.
 
 get_item_data(OldData, Container) when Container =/= <<"">> ->
@@ -468,7 +471,8 @@ new_add_json(Cfg, Data) ->
 	Now = util:now(),
 	NewTime = ?IF(TimeData=:=undefined, Now, util:date_format(TimeType, TimeData)),
 	Title = get_data(TitleF, Data, <<"">>),
-	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(get_data(LinkA, Data, <<"">>))]),
+	% ?INFO("Title~ts",[Title]),
+	TUrl = util:fbin(<<"~s~s"/utf8>>, [LinkPre, build_link_a(SourceId,get_data(LinkA, Data, <<"">>))]),
 	% Url = ?l2b(?Host ++ "/" ++ Param),
 	Abstract = get_data(DescF, Data, <<"">>),
 	Source = get_data(AuthorF, Data, <<"">>),
@@ -491,8 +495,8 @@ do_parse_data(Cfg, [OldData|T], News, Now, TodayData, TopL) ->
 	Data = get_item_data(OldData, Container), 
 	Title = get_data(TitleF, Data, <<"">>),
 	TNews = new_add_json(Cfg, Data),
-	case TNews of
-		false ->
+	case TNews=:=false orelse Title =:= <<"">>  of
+		true ->
 			do_parse_data(Cfg, T, News, Now, TodayData, TopL);
 		_ ->
 			case IsTop =:= ?true of

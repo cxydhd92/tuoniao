@@ -79,7 +79,12 @@ up_sys_id(AId) ->
     
 up_news_db(Changes, AId) ->
     up_sys_id(AId),
-    up_news_db(Changes).
+    case catch up_news_db(Changes) of
+        ok -> ok;
+        Err ->
+            ?ERR("xxxxxxxxxErr~w",[Err]),
+            ok
+    end.
 
 up_news_db([]) ->
     ok;

@@ -8,19 +8,19 @@
 
 init(Req0, State) ->
 	Method = cowboy_req:method(Req0),
-	?INFO(" Method~w	",[Method]),
+	% ?INFO(" Method~w	",[Method]),
 	Req1 = case Method of
 		<<"GET">> ->
 			Param = cowboy_req:parse_qs(Req0),
 			handle(Param, Req0);
 		_ ->
-			?INFO("Method~w",[Method]),
+			% ?INFO("Method~w",[Method]),
 			cowboy_req:reply(405, Req0)
 	end,
 	{ok, Req1, State}.
 
 handle(Param, Req) ->
-	?INFO("Param~w",[Param]),
+	% ?INFO("Param~w",[Param]),
 	case catch do_handle(Param, Req) of
 		{ok,  Reply} -> Reply;
 		_Err ->
@@ -39,23 +39,29 @@ get_page_news(NodeId, Today) ->
 do_handle([], Req) ->
 	{ok, cowboy_req:reply(400, [], <<"Missing echo parameter.">>, Req)};
 do_handle(PostVals, Req) ->
-	ClassId = ?l2i(?b2l(proplists:get_value(<<"classId">>, PostVals, <<"1">>))),
+	ClassId = ?l2i(?b2l(proplists:get_value(<<"class_id">>, PostVals, <<"1">>))),
 	NodeId = ?l2i(?b2l(proplists:get_value(<<"node_id">>, PostVals, <<"0">>))),
 	TimeZero = ?l2i(?b2l(proplists:get_value(<<"time">>, PostVals, <<"0">>))),
-	?INFO("ClassId ~w NodeId ~w ",[ClassId, NodeId]),
+	
 	case is_integer(ClassId) andalso is_integer(NodeId) of
 		true when ClassId > 0 andalso NodeId > 0 ->
 			Today = util:today(),
 			NTimeZero = ?IF(TimeZero =:= 0, Today, TimeZero),
+			#cfg_news_source{name = NodeName} = cfg_news_source:get(NodeId),
 			PageNewsL = get_page_news(NodeId, NTimeZero),
-			Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, title=Title, url=Url, source=Source}, Acc) ->
-				#cfg_news_source{name = NodeName} = cfg_news_source:get(NodeId),
-				[[{id, Id},{node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+			Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, title=Title, url=Url, source=Source}, {Acc, Rank}) ->
+				NTitle = case Rank of
+					1 -> util:fbin(<<"~s~s"/utf8>>, [<<"<font color=\"red\">1. </font>">>, Title]);
+					2 -> util:fbin(<<"~s~s"/utf8>>, [<<"<font color=\"blue\">2. </font>">>, Title]);
+					3-> util:fbin(<<"~s~s"/utf8>>, [<<"<font color=\"green\">3. </font>">>, Title]);
+					_ -> util:fbin(<<"~w~s~s"/utf8>>, [Rank, <<". ">>, Title])
+				end,
+				{[[{id, Id},{abstract, Abs}, {title, NTitle}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc], Rank-1}
 			end,
-			NNewsL = lists:foldl(Fun, [], PageNewsL),
+			{NNewsL, _} = lists:foldl(Fun, {[], length(PageNewsL)}, PageNewsL),
 			% Data = [{data, NNewsL}],
 			% ?INFO("NNewsL~w", [NNewsL]),
-			Reply = jsx:encode([{data, NNewsL}]),
+			Reply = jsx:encode([{data, NNewsL},{name, NodeName}]),
 			% ?INFO("Reply ~w",[Reply]),
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),

@@ -61,25 +61,26 @@ alloc(State = #mgr_source{total_list = OldList, list = CfgList}) ->
 		case lists:member(SourceId, Acc2) of
 			true -> {Acc1, Acc2};
 			_ ->
-				{alloc(SourceId, Acc1), [SourceId|Acc2]}
+				{alloc(SourceId, Acc1, Acc1), [SourceId|Acc2]}
 		end
 	end,
 	{NCfgList, NTotalList} = lists:foldl(Fun, {CfgList, OldList}, cfg_news_source:list_key()),
 	State#mgr_source{total_list = NTotalList, list = NCfgList}.
 
-alloc(SourceId, []) ->
+alloc(SourceId, [], PList) ->
 	case source:start({self(), SourceId, ?false}) of
 		{ok, Pid} ->
-			[{Pid, [SourceId]}];
-		_ -> []
+			[{Pid, [SourceId]}|PList];
+		_ -> PList
 	end;
-alloc(SourceId, [{Pid, SL}|List]) ->
+alloc(SourceId, [{Pid, SL}|List], PList) ->
 	case length(SL) < ?source_node_num of
 		true ->
+			?INFO("xxxxxxadd_source SourceId~w",[SourceId]),
 			Pid ! {add_source, SourceId, ?false},
 			[{Pid, SL++[SourceId]}|List];
 		_ ->
-			alloc(SourceId, List)
+			alloc(SourceId, List, PList)
 	end.
 
 
@@ -127,6 +128,7 @@ do_handle_cast(_Msg, State)->
 	{noreply, State}.
 
 do_handle_info(alloc, State) ->
+	?INFO("xxxxxxxxxx restart Alloc"),
 	NState = alloc(State),
 	erlang:send_after(3600*1000, self(), alloc),
 	{noreply, NState};	

@@ -66,11 +66,11 @@ get(10003) ->
 		url = <<"https://api3-normal-c-lq.snssdk.com/api/feed/hotboard_online/v1/?category=hotboard_online&count=50"/utf8>>,
 		type = 1,
 		is_top = 1,
-		link_pre = <<"https://www.toutiao.com/a"/utf8>>,
+		link_pre = <<"https://is-lq.snssdk.com/search/?keyword=%2523"/utf8>>,
 		data = <<"data"/utf8>>,
 		container = <<"content|raw_data"/utf8>>,
 		title = <<"title"/utf8>>,
-		link_a = <<"hot_item_id"/utf8>>,
+		link_a = <<"title"/utf8>>,
 		desc = <<"hot_desc"/utf8>>,
 		author = <<""/utf8>>,
 		img = <<""/utf8>>,
@@ -990,7 +990,7 @@ get(50002) ->
 		source_id = 50002,
 		class = 5,
 		sub_class = 4,
-		name = <<"梨视频.体育热榜"/utf8>>,
+		name = <<"梨视频.财富热榜"/utf8>>,
 		icon_name = <<"pearvideo"/utf8>>,
 		url = <<"https://www.pearvideo.com/popular_loading.jsp?reqType=1&categoryId=3&start=0&sort=0"/utf8>>,
 		type = 2,
@@ -1006,6 +1006,147 @@ get(50002) ->
 		count = <<""/utf8>>,
 		time = <<""/utf8>>,
 		time_type = 0
+	};
+
+get(50003) ->
+	#cfg_news_source{
+		source_id = 50003,
+		class = 5,
+		sub_class = 4,
+		name = <<"第1财经.新闻周榜"/utf8>>,
+		icon_name = <<"yicai"/utf8>>,
+		url = <<"https://www.yicai.com/api/ajax/getranklistbykeys?keys=newsRank%2CvideoRank%2CimageRank%2CliveRank"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<"https://www.yicai.com"/utf8>>,
+		data = <<"newsRank|week"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"NewsTitle"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(50004) ->
+	#cfg_news_source{
+		source_id = 50004,
+		class = 5,
+		sub_class = 4,
+		name = <<"第1财经.视频周榜"/utf8>>,
+		icon_name = <<"yicai"/utf8>>,
+		url = <<"https://www.yicai.com/api/ajax/getranklistbykeys?keys=newsRank%2CvideoRank%2CimageRank%2CliveRank"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<"https://www.yicai.com"/utf8>>,
+		data = <<"videoRank|week"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"NewsTitle"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(50005) ->
+	#cfg_news_source{
+		source_id = 50005,
+		class = 5,
+		sub_class = 4,
+		name = <<"雪球网.热门文章"/utf8>>,
+		icon_name = <<"xueqiu"/utf8>>,
+		url = <<"https://xueqiu.com/statuses/hots.json?a=1&count=10&page=1&meigu=0&scope=day&type=news"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<"https://xueqiu.com"/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"target"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"user|screen_name"/utf8>>,
+		img = <<"pic"/utf8>>,
+		count = <<"reply_count"/utf8>>,
+		time = <<"created_at"/utf8>>,
+		time_type = 5,
+		head = [{"Cookie", "xqat=328f8bbf7903261db206d83de7b85c58e4486dda"}]
+	};
+
+get(50006) ->
+	#cfg_news_source{
+		source_id = 50006,
+		class = 5,
+		sub_class = 4,
+		name = <<"第1财经.图集周榜"/utf8>>,
+		icon_name = <<"yicai"/utf8>>,
+		url = <<"https://www.yicai.com/api/ajax/getranklistbykeys?keys=newsRank%2CvideoRank%2CimageRank%2CliveRank"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<"https://www.yicai.com"/utf8>>,
+		data = <<"videoRank|week"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"NewsTitle"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(50007) ->
+	#cfg_news_source{
+		source_id = 50007,
+		class = 5,
+		sub_class = 4,
+		name = <<"雪球网.热门公告"/utf8>>,
+		icon_name = <<"xueqiu"/utf8>>,
+		url = <<"https://xueqiu.com/statuses/hots.json?a=1&count=10&page=1&meigu=0&scope=day&type=notice"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<"https://xueqiu.com"/utf8>>,
+		data = <<""/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"target"/utf8>>,
+		desc = <<"description"/utf8>>,
+		author = <<"user|screen_name"/utf8>>,
+		img = <<"pic"/utf8>>,
+		count = <<"reply_count"/utf8>>,
+		time = <<"created_at"/utf8>>,
+		time_type = 5,
+		head = [{"Cookie", "xqat=328f8bbf7903261db206d83de7b85c58e4486dda"}]
+	};
+
+get(50008) ->
+	#cfg_news_source{
+		source_id = 50008,
+		class = 5,
+		sub_class = 4,
+		name = <<"雪球网.热贴"/utf8>>,
+		icon_name = <<"xueqiu"/utf8>>,
+		url = <<""/utf8>>,
+		type = 1,
+		is_top = 0,
+		link_pre = <<"https://xueqiu.com"/utf8>>,
+		data = <<"items"/utf8>>,
+		container = <<"original_status"/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"target"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<"user|screen_name"/utf8>>,
+		img = <<""/utf8>>,
+		count = <<"reply_count"/utf8>>,
+		time = <<"created_at"/utf8>>,
+		time_type = 5,
+		head = [{"Cookie", "xqat=328f8bbf7903261db206d83de7b85c58e4486dda"}]
 	};
 
 get(60001) ->
@@ -1025,7 +1166,7 @@ get(60001) ->
 		link_a = <<"link|url"/utf8>>,
 		desc = <<""/utf8>>,
 		author = <<""/utf8>>,
-		img = <<"imageArea|url"/utf8>>,
+		img = <<""/utf8>>,
 		count = <<"metricsArea|text"/utf8>>,
 		time = <<""/utf8>>,
 		time_type = 0,
@@ -1112,7 +1253,7 @@ get(110001) ->
 		url = <<"https://s.weibo.com/top/summary?cate=realtimehot"/utf8>>,
 		type = 2,
 		is_top = 1,
-		link_pre = <<"https://s.weibo.com/weibo?q="/utf8>>,
+		link_pre = <<"https://s.weibo.com/weibo?q=%2523"/utf8>>,
 		data = <<"<tbody>([\\s\\S]+?)</tbody>"/utf8>>,
 		container = <<"<tr.+?class=\"\">\\s+?<td.+?class=\"td-\\d+.+?ranktop\">([\\s\\S]+?)</tr>"/utf8>>,
 		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
@@ -1288,6 +1429,12 @@ list_key() ->
 		30003,
 		50001,
 		50002,
+		50003,
+		50004,
+		50005,
+		50006,
+		50007,
+		50008,
 		60001,
 		60002,
 		100001,
@@ -1303,13 +1450,13 @@ news_source_class(1) ->
 	[10002,10003,10004,10005,10006,10007,10008,10009];
 
 news_source_class(2) ->
-	[10001, 20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,20027,20028,20029];
+	[10001,20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,20027,20028,20029];
 
 news_source_class(3) ->
-	[30001, 30002, 30003];
+	[30001,30002,30003];
 
 news_source_class(5) ->
-	[50001, 50002];
+	[50001,50002,50003,50004,50005,50006,50007,50008];
 
 news_source_class(6) ->
 	[60001,60002];
@@ -1318,7 +1465,7 @@ news_source_class(10) ->
 	[100001,100002];
 
 news_source_class(11) ->
-	[110001,110002, 110003,110004,110005,110006];
+	[110001,110002,110003,110004,110005,110006];
 
 news_source_class(_) -> []. 
 

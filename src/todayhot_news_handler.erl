@@ -8,7 +8,7 @@
 
 init(Req0, State) ->
 	Method = cowboy_req:method(Req0),
-	?INFO(" Method~w	",[Method]),
+	% ?INFO(" Method~w	",[Method]),
 	Req1 = case Method of
 		<<"GET">> ->
 			Param = cowboy_req:parse_qs(Req0),
@@ -20,7 +20,7 @@ init(Req0, State) ->
 	{ok, Req1, State}.
 
 handle(Param, Req) ->
-	?INFO("Param~w",[Param]),
+	% ?INFO("Param~w",[Param]),
 	case catch do_handle(Param, Req) of
 		{ok,  Reply} -> Reply;
 		_Err ->
@@ -62,21 +62,26 @@ do_handle(PostVals, Req) ->
 	PageSize = ?l2i(?b2l(proplists:get_value(<<"page_size">>, PostVals, <<"50">>))),
 	TimeZero = ?l2i(?b2l(proplists:get_value(<<"time">>, PostVals, <<"0">>))),
 
-	?INFO("ClassId ~w MinId ~w PageSize ~w",[ClassId, MinId, PageSize]),
+	% ?INFO("ClassId ~w MinId ~w PageSize ~w",[ClassId, MinId, PageSize]),
 	case is_integer(ClassId) andalso is_integer(MinId) andalso is_integer(PageSize) andalso is_integer(TimeZero) of
 		true when ClassId > 0 andalso PageSize > 0 ->
 			Today = util:today(),
 			NTimeZero = ?IF(TimeZero =:= 0, Today, TimeZero),
-			{PageNewsL=[#todayhot_news{id=NId}|_], IsDone} = get_page_news(MinId, ClassId, PageSize, NTimeZero, Today),
-			Fun  = fun(#todayhot_news{id=Id, node_id = NodeId, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
-				#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
-				[[{id, Id},{node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+			{PageNewsL, IsDone} = get_page_news(MinId, ClassId, PageSize, NTimeZero, Today),
+			{NNewsL, NNId} = case PageNewsL of
+				[#todayhot_news{id=NId}|_] ->
+					Fun  = fun(#todayhot_news{id=Id, node_id = NodeId, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
+						#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
+						[[{id, Id},{node_id, NodeId}, {node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+					end,
+					{lists:foldl(Fun, [], PageNewsL), NId};
+				_ ->
+					{[], 0}
 			end,
-			NNewsL = lists:foldl(Fun, [], PageNewsL),
 			% Data = [{data, NNewsL}],
-			?INFO("NNewsL~w", [length(NNewsL)]),
+			% ?INFO("NNewsL~w", [length(NNewsL)]),
 			NextTime = ?IF(IsDone, NTimeZero-86400, NTimeZero), 
-			Reply = jsx:encode([{data, NNewsL}, {next_time, NextTime}, {next_id, NId}]),
+			Reply = jsx:encode([{data, NNewsL}, {next_time, NextTime}, {next_id, NNId}]),
 			% ?INFO("Reply ~w",[Reply]),
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
