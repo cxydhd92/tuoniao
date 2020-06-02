@@ -831,7 +831,7 @@ get(20027) ->
 		icon_name = <<"leikeji"/utf8>>,
 		url = <<"https://www.leikeji.com"/utf8>>,
 		type = 2,
-		is_top = 0,
+		is_top = 1,
 		link_pre = <<"https://www.leikeji.com"/utf8>>,
 		data = <<"<ul class=\"aside-article-list\">([\\s\\S]+?)</ul>"/utf8>>,
 		container = <<""/utf8>>,

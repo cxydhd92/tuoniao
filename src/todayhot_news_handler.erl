@@ -30,12 +30,13 @@ handle(Param, Req) ->
 
 get_page_news(MinId, ClassId, PageSize, TimeZero, Today) ->
 	EtsName = ?IF(Today=:=TimeZero, ?ETS_TODAYHOT_TODAY, ?ETS_TODAYHOT_NEWS),
-	{TodayNewsL, IsDone} = do_get_page_news(MinId, ClassId, PageSize, TimeZero, EtsName),
-	{lists:keysort(#todayhot_news.id, TodayNewsL), IsDone} .
+	{TodayNewsL, IsDone, NTimeZero} = do_get_page_news(MinId, ClassId, PageSize, TimeZero, EtsName, [], ?false),
+	{lists:keysort(#todayhot_news.id, TodayNewsL), IsDone, NTimeZero} .
 
-do_get_page_news(MinId, ClassId, PageSize, TimeZero, EtsName) ->	
+do_get_page_news(_MinId, _ClassId, _PageSize, TimeZero, _EtsName, NewsL, Loop) when Loop > 1 ->	
+	{NewsL, true, TimeZero};
+do_get_page_news(MinId, ClassId, PageSize, TimeZero, EtsName, CNewsL, Loop) ->	
 	Nodes = cfg_news_source:news_source_class(ClassId),
-	% ?INFO("Nodes~w",[Nodes]),
 	Fun = fun(NodeId, Acc) ->
 		case ets:lookup(EtsName, {NodeId, TimeZero}) of
 			[#todayhot_node_news{news= NewsL}] ->	Acc ++ NewsL;
@@ -45,7 +46,14 @@ do_get_page_news(MinId, ClassId, PageSize, TimeZero, EtsName) ->
 	NNewsL = lists:foldl(Fun, [], Nodes),
 	SortNewsL = lists:reverse(lists:keysort(#todayhot_news.id, NNewsL)),
 	{PageNewsL, IsDone} = get_class_news(SortNewsL, MinId, PageSize, []),
-	{PageNewsL, IsDone}.
+	TNewsL = CNewsL ++ PageNewsL,
+	Len  = length(TNewsL),
+	case Len >= 20 of
+		true ->
+			{TNewsL, IsDone, TimeZero};
+		_ ->
+			do_get_page_news(MinId, ClassId, PageSize - Len, TimeZero-86400, EtsName, TNewsL, Loop+1)
+	end.
 
 get_class_news([], _, _, NewsL) -> {NewsL, true};
 get_class_news(_, _, 0, NewsL) -> {NewsL, false};
@@ -66,8 +74,8 @@ do_handle(PostVals, Req) ->
 	case is_integer(ClassId) andalso is_integer(MinId) andalso is_integer(PageSize) andalso is_integer(TimeZero) of
 		true when ClassId > 0 andalso PageSize > 0 ->
 			Today = util:today(),
-			NTimeZero = ?IF(TimeZero =:= 0, Today, TimeZero),
-			{PageNewsL, IsDone} = get_page_news(MinId, ClassId, PageSize, NTimeZero, Today),
+			TimeZero1 = ?IF(TimeZero =:= 0, Today, TimeZero),
+			{PageNewsL, IsDone, NTimeZero} = get_page_news(MinId, ClassId, PageSize, TimeZero1, Today),
 			{NNewsL, NNId} = case PageNewsL of
 				[#todayhot_news{id=NId}|_] ->
 					Fun  = fun(#todayhot_news{id=Id, node_id = NodeId, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->

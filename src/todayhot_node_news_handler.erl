@@ -28,7 +28,7 @@ handle(Param, Req) ->
 			cowboy_req:reply(405, Req)
 	end.
 
-get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero, Today) ->
+get_page_news(MinId, _ClassId, NodeId, PageSize, TimeZero, Today) ->
 	{EtsName, HotNewsL} = case Today=:=TimeZero of
 		true ->
 			Node = ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}),
@@ -40,17 +40,26 @@ get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero, Today) ->
 		_ ->
 			{?ETS_TODAYHOT_NEWS, []}
 	end,
-	{TodayNewsL, IsDone} = do_get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero, EtsName, HotNewsL),
-	{lists:keysort(#todayhot_news.id, TodayNewsL), IsDone} .
+	{TodayNewsL, IsDone, NTimeZero} = do_get_page_news(MinId, NodeId, PageSize, TimeZero, EtsName, HotNewsL, [], ?false),
+	{lists:keysort(#todayhot_news.id, TodayNewsL), IsDone, NTimeZero} .
 
-do_get_page_news(MinId, _ClassId, NodeId, PageSize, TimeZero, EtsName, HotNewsL) ->	
+do_get_page_news(_MinId, _NodeId, _PageSize, TimeZero, _EtsName, _HotNewsL, NewsL, Loop) when Loop > 7 ->
+	{NewsL, true, TimeZero};
+do_get_page_news(MinId, NodeId, PageSize, TimeZero, EtsName, HotNewsL, CNewsL, Loop) ->	
 	NNewsL = case ets:lookup(EtsName, {NodeId, TimeZero}) of
 		[#todayhot_node_news{news = NewsL}] -> NewsL;
 		_ -> []
 	end,
 	SortNewsL = lists:reverse(lists:keysort(#todayhot_news.id, NNewsL)),
 	{PageNewsL, IsDone} = get_class_news(SortNewsL, MinId, PageSize, [], HotNewsL),
-	{PageNewsL, IsDone}.
+	TNewsL = PageNewsL++CNewsL,
+	Len  = length(TNewsL),
+	case Len >= 20 of
+		true ->
+			{TNewsL, IsDone, TimeZero};
+		_ ->
+			do_get_page_news(MinId, NodeId, PageSize - Len, TimeZero-86400, EtsName, HotNewsL, TNewsL, Loop+1)
+	end.
 
 get_next_time(TimeZero, _NodeId, ?false) -> TimeZero - 86400;
 get_next_time(TimeZero, NodeId, Num) when Num > 0->
@@ -84,8 +93,8 @@ do_handle(PostVals, Req) ->
 	case is_integer(NodeId) andalso is_integer(ClassId) andalso is_integer(MinId) andalso is_integer(PageSize) andalso is_integer(TimeZero) of
 		true when ClassId > 0 andalso PageSize > 0 andalso NodeId > 0 ->
 			Today = util:today(),
-			NTimeZero = ?IF(TimeZero =:= 0, Today, TimeZero), 
-			{PageNewsL, IsDone} = get_page_news(MinId, ClassId, NodeId, PageSize, NTimeZero, Today),
+			TimeZero1 = ?IF(TimeZero =:= 0, Today, TimeZero), 
+			{PageNewsL, IsDone, NTimeZero} = get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero1, Today),
 			#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
 			{NNewsL, NNId} = case PageNewsL of
 				[#todayhot_news{id=NId}|_] ->
