@@ -52,7 +52,7 @@ do_get_page_news(MinId, ClassId, PageSize, TimeZero, EtsName, CNewsL, Loop) ->
 		true ->
 			{TNewsL, IsDone, TimeZero};
 		_ ->
-			do_get_page_news(MinId, ClassId, PageSize - Len, TimeZero-86400, EtsName, TNewsL, Loop+1)
+			do_get_page_news(MinId, ClassId, PageSize - Len, TimeZero-86400, ?ETS_TODAYHOT_NEWS, TNewsL, Loop+1)
 	end.
 
 get_class_news([], _, _, NewsL) -> {NewsL, true};

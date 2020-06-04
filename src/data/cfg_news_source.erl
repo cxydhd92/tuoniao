@@ -1149,6 +1149,30 @@ get(50008) ->
 		head = [{"Cookie", "xqat=328f8bbf7903261db206d83de7b85c58e4486dda"}]
 	};
 
+get(50009) ->
+	#cfg_news_source{
+		source_id = 50009,
+		class = 5,
+		sub_class = 1,
+		name = <<"凤凰财经.热榜"/utf8>>,
+		icon_name = <<"ifeng"/utf8>>,
+		url = <<"https://finance.ifeng.com/studio"/utf8>>,
+		type = 4,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"hotNews"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<"summary"/utf8>>,
+		author = <<""/utf8>>,
+		img = <<"img"/utf8>>,
+		count = <<"num"/utf8>>,
+		time = <<"publishTimestamp"/utf8>>,
+		time_type = 1,
+		json_data = <<"{\"nav\"((.|\n)*?)\"}]}"/utf8>>
+	};
+
 get(60001) ->
 	#cfg_news_source{
 		source_id = 60001,
@@ -1435,6 +1459,7 @@ list_key() ->
 		50006,
 		50007,
 		50008,
+		50009,
 		60001,
 		60002,
 		100001,
@@ -1456,7 +1481,7 @@ news_source_class(3) ->
 	[30001,30002,30003];
 
 news_source_class(5) ->
-	[50001,50002,50003,50004,50005,50006,50007,50008];
+	[50001,50002,50003,50004,50005,50006,50007,50008,50009];
 
 news_source_class(6) ->
 	[60001,60002];

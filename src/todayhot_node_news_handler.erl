@@ -58,7 +58,7 @@ do_get_page_news(MinId, NodeId, PageSize, TimeZero, EtsName, HotNewsL, CNewsL, L
 		true ->
 			{TNewsL, IsDone, TimeZero};
 		_ ->
-			do_get_page_news(MinId, NodeId, PageSize - Len, TimeZero-86400, EtsName, HotNewsL, TNewsL, Loop+1)
+			do_get_page_news(MinId, NodeId, PageSize - Len, TimeZero-86400, ?ETS_TODAYHOT_NEWS, HotNewsL, TNewsL, Loop+1)
 	end.
 
 get_next_time(TimeZero, _NodeId, ?false) -> TimeZero - 86400;

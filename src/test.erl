@@ -91,7 +91,7 @@ get_data_f1([Data|L], Body, Default) ->
 	end.
 
 test_xml() ->
-	case ibrowse:send_req("https://rss. huxiu.com/", [], get) of
+	case ibrowse:send_req("https://rss.huxiu.com/", [], get) of
 		{ok, "200", _ResponseHeaders, Body} ->
 			{XmlDoc, _B} = xmerl_scan:string(Body),
 			 Items = xmerl_xpath:string("/rss/channel/item",XmlDoc),  
