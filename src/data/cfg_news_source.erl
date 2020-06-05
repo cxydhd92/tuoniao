@@ -219,6 +219,29 @@ get(10009) ->
 		time_type = 0
 	};
 
+get(10010) ->
+	#cfg_news_source{
+		source_id = 10010,
+		class = 1,
+		sub_class = 1,
+		name = <<"凤凰资讯.热榜"/utf8>>,
+		icon_name = <<"ifeng"/utf8>>,
+		url = <<"http://news.ifeng.com/c/api/content/graphic/article"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"data"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<"img"/utf8>>,
+		count = <<"num"/utf8>>,
+		time = <<"publishTimestamp"/utf8>>,
+		time_type = 1
+	};
+
 get(20001) ->
 	#cfg_news_source{
 		source_id = 20001,
@@ -961,6 +984,29 @@ get(30003) ->
 		time_type = 0
 	};
 
+get(30004) ->
+	#cfg_news_source{
+		source_id = 30004,
+		class = 3,
+		sub_class = 1,
+		name = <<"凤凰娱乐.热榜"/utf8>>,
+		icon_name = <<"ifeng"/utf8>>,
+		url = <<"http://ent.ifeng.com/c/api/content/graphic/article"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"data"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<"img"/utf8>>,
+		count = <<"num"/utf8>>,
+		time = <<"publishTimestamp"/utf8>>,
+		time_type = 1
+	};
+
 get(50001) ->
 	#cfg_news_source{
 		source_id = 50001,
@@ -1164,7 +1210,7 @@ get(50009) ->
 		container = <<""/utf8>>,
 		title = <<"title"/utf8>>,
 		link_a = <<"url"/utf8>>,
-		desc = <<"summary"/utf8>>,
+		desc = <<""/utf8>>,
 		author = <<""/utf8>>,
 		img = <<"img"/utf8>>,
 		count = <<"num"/utf8>>,
@@ -1265,6 +1311,29 @@ get(100002) ->
 		count = <<""/utf8>>,
 		time = <<""/utf8>>,
 		time_type = 0
+	};
+
+get(100003) ->
+	#cfg_news_source{
+		source_id = 100003,
+		class = 10,
+		sub_class = 1,
+		name = <<"凤凰体育.热榜"/utf8>>,
+		icon_name = <<"ifeng"/utf8>>,
+		url = <<"http://sports.ifeng.com/c/api/content/graphic/article"/utf8>>,
+		type = 1,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"data"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"url"/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<"img"/utf8>>,
+		count = <<"num"/utf8>>,
+		time = <<"publishTimestamp"/utf8>>,
+		time_type = 1
 	};
 
 get(110001) ->
@@ -1419,6 +1488,7 @@ list_key() ->
 		10007,
 		10008,
 		10009,
+		10010,
 		20001,
 		20002,
 		20003,
@@ -1451,6 +1521,7 @@ list_key() ->
 		30001,
 		30002,
 		30003,
+		30004,
 		50001,
 		50002,
 		50003,
@@ -1464,6 +1535,7 @@ list_key() ->
 		60002,
 		100001,
 		100002,
+		100003,
 		110001,
 		110002,
 		110003,
@@ -1472,13 +1544,13 @@ list_key() ->
 		110006
 	].
 news_source_class(1) ->
-	[10002,10003,10004,10005,10006,10007,10008,10009];
+	[10002,10003,10004,10005,10006,10007,10008,10009,10010];
 
 news_source_class(2) ->
 	[10001,20001,20002,20003,20004,20005,20006,20007,20008,20009,20010,20011,20012,20013,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,20027,20028,20029];
 
 news_source_class(3) ->
-	[30001,30002,30003];
+	[30001,30002,30003,30004];
 
 news_source_class(5) ->
 	[50001,50002,50003,50004,50005,50006,50007,50008,50009];
@@ -1487,7 +1559,7 @@ news_source_class(6) ->
 	[60001,60002];
 
 news_source_class(10) ->
-	[100001,100002];
+	[100001,100002,100003];
 
 news_source_class(11) ->
 	[110001,110002,110003,110004,110005,110006];
