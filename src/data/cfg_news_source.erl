@@ -1121,7 +1121,7 @@ get(50005) ->
 		count = <<"reply_count"/utf8>>,
 		time = <<"created_at"/utf8>>,
 		time_type = 5,
-		head = [{"Cookie", "xqat=328f8bbf7903261db206d83de7b85c58e4486dda"}]
+		head = [{"Cookie", "xqat=ea139be840cf88ff8c30e6943cf26aba8ad77358"}]
 	};
 
 get(50006) ->
@@ -1168,7 +1168,7 @@ get(50007) ->
 		count = <<"reply_count"/utf8>>,
 		time = <<"created_at"/utf8>>,
 		time_type = 5,
-		head = [{"Cookie", "xqat=328f8bbf7903261db206d83de7b85c58e4486dda"}]
+		head = [{"Cookie", "xqat=ea139be840cf88ff8c30e6943cf26aba8ad77358"}]
 	};
 
 get(50008) ->
@@ -1192,7 +1192,7 @@ get(50008) ->
 		count = <<"reply_count"/utf8>>,
 		time = <<"created_at"/utf8>>,
 		time_type = 5,
-		head = [{"Cookie", "xqat=328f8bbf7903261db206d83de7b85c58e4486dda"}]
+		head = [{"Cookie", "xqat=ea139be840cf88ff8c30e6943cf26aba8ad77358"}]
 	};
 
 get(50009) ->

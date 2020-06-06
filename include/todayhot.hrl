@@ -8,14 +8,6 @@
 
 -define(REMOVE_CHAR, [$<, $>, $s, $p, $a, $n, $/, $b, $l, $u, $e,$", $c,$l]).
 
--record(todayhot, {
-    compre = []  %% 综合新闻
-    ,tech = []   %% 科技新闻
-    ,recreation = []  %% 娱乐
-    ,videos = []      %% 视频
-    ,time = 0     %% 添加时间
-}).
-
 -record(todayhot_nodes, {
     node_id = 0 
     ,node_name    %% 节点名
@@ -57,4 +49,23 @@
     ,source  = <<"">>
     ,count = <<"">>
     ,time = 0
+}).
+
+%% 用户相关结构
+-define(todayhot_user_ver, 1).
+-record(todayhot_user, {
+    ver = ?todayhot_user_ver
+    ,id = 1      %% 用户id
+    ,name    
+    ,source_list = [] %% 订阅源列表
+}).
+
+%% 用户订阅源
+-define(todayhot_user_source, 1).
+-record(todayhot_user_source, {
+    ver = ?todayhot_user_source
+    , id = 1       %% 源id
+    , filters = [] %% 过滤关键词列表
+    , tracks = []  %% 追踪关键词列表
+    , time = 0     %% 添加时间
 }).

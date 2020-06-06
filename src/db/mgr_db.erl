@@ -124,7 +124,8 @@ create_todayhot_user_cfg_node() ->
         `node_id` INT(11) NOT NULL  COMMENT '订阅源节点id' auto_increment, 
         `class` INT(11) NOT NULL  COMMENT '分类',
         `node_name` varchar(50) NOT NULL  COMMENT '节点名称',
-        `users` text NOT NULL  COMMENT '自定义源用户列表',
+        `url` text NOT NULL  COMMENT '源地址：支持rss、atom订阅源',
+        `is_open` INT(11) NOT NULL  COMMENT '是否公开',
         `verify` INT(11) NOT NULL  COMMENT '是否验证通过',
         `add_time` INT(11)  NOT NULL COMMENT '时间',
         `verify_time` INT(11)  NOT NULL COMMENT '验证通过时间',
@@ -166,6 +167,30 @@ create_todayhot_node_hotlist() ->
         `news` text NOT NULL  COMMENT '榜单数据',
         PRIMARY KEY ( `node_id`, `zero`)
         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"/utf8
+    >>,
+    ok  = mysql_poolboy:query(?POOL, Sql),
+    ok.
+
+create_todayhot_user() ->
+    Sql = 
+    <<"CREATE TABLE IF NOT EXISTS `todayhot_user`(
+        `id` bigint(20) NOT NULL COMMENT '用户id', 
+        `name` varchar(50) NOT NULL  COMMENT '用户昵称',
+        `source_list` text NOT NULL  COMMENT '订阅源',
+        PRIMARY KEY ( `id` )
+        )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; "/utf8
+    >>,
+    ok  = mysql_poolboy:query(?POOL, Sql),
+    ok.
+
+create_todayhot_user_session() ->
+    Sql = 
+    <<"CREATE TABLE IF NOT EXISTS `todayhot_user_session`(
+        `id` bigint(20) NOT NULL COMMENT '用户id', 
+        `session` varchar(100) NOT NULL  COMMENT '',
+        `time` INT(11) NOT NULL  COMMENT '过期时间',
+        PRIMARY KEY ( `id` )
+        )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; "/utf8
     >>,
     ok  = mysql_poolboy:query(?POOL, Sql),
     ok.
