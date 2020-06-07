@@ -5,6 +5,8 @@
 -define(ETS_TODAYHOT_NEWS, todayhot_news_ets). %%资讯数据
 -define(ETS_TODAYHOT_TODAY, todayhot_today_ets). %%当天数据
 -define(ETS_TODAYHOT_HOTLIST, todayhot_hot_list_ets). %%当天最新榜单数据
+-define(ETS_TODAYHOT_USER_SESSION, todayhot_use_session_ets). %% 用户session数据
+-define(ETS_TODAYHOT_USER, todayhot_use_ets). %% 用户数据
 
 -define(REMOVE_CHAR, [$<, $>, $s, $p, $a, $n, $/, $b, $l, $u, $e,$", $c,$l]).
 
@@ -55,8 +57,9 @@
 -define(todayhot_user_ver, 1).
 -record(todayhot_user, {
     ver = ?todayhot_user_ver
-    ,id = 1      %% 用户id
-    ,name    
+    ,account       %% 用户id
+    ,name  
+    ,password
     ,source_list = [] %% 订阅源列表
 }).
 
@@ -68,4 +71,12 @@
     , filters = [] %% 过滤关键词列表
     , tracks = []  %% 追踪关键词列表
     , time = 0     %% 添加时间
+}).
+
+-define(todayhot_user_session_ver, 1).
+-record(todayhot_user_session, {
+    ver = ?todayhot_user_session_ver
+    ,session_id = 1      %% 
+    ,account = 0     
+    ,time = 0            %% 到期时间
 }).

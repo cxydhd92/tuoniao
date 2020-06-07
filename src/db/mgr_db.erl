@@ -174,10 +174,11 @@ create_todayhot_node_hotlist() ->
 create_todayhot_user() ->
     Sql = 
     <<"CREATE TABLE IF NOT EXISTS `todayhot_user`(
-        `id` bigint(20) NOT NULL COMMENT '用户id', 
+        `account` varchar(50) NOT NULL COMMENT '用户账号', 
         `name` varchar(50) NOT NULL  COMMENT '用户昵称',
+        `password` varchar(100) NOT NULL  COMMENT '密码',
         `source_list` text NOT NULL  COMMENT '订阅源',
-        PRIMARY KEY ( `id` )
+        PRIMARY KEY ( `account` )
         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; "/utf8
     >>,
     ok  = mysql_poolboy:query(?POOL, Sql),
@@ -186,7 +187,7 @@ create_todayhot_user() ->
 create_todayhot_user_session() ->
     Sql = 
     <<"CREATE TABLE IF NOT EXISTS `todayhot_user_session`(
-        `id` bigint(20) NOT NULL COMMENT '用户id', 
+        `account` varchar(50) NOT NULL COMMENT '用户账号', 
         `session` varchar(100) NOT NULL  COMMENT '',
         `time` INT(11) NOT NULL  COMMENT '过期时间',
         PRIMARY KEY ( `id` )
