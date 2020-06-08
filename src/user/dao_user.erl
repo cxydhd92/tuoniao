@@ -6,10 +6,10 @@
 -export([load/0, up_user_db/1, up_session_db/1, insert_user/1]).
 
 load() ->
-    Sql = <<"select account, name, password, source_list, users from todayhot_user ">>,
+    Sql = <<"select account, name, password, source_list from todayhot_user ">>,
     {ok, _, Data}  = mysql_poolboy:query(?POOL, Sql),
     Now = util:now(),
-    Sql1 = <<"select account, session_id, time from todayhot_user_session where time > ?">>,
+    Sql1 = <<"select account, session, time from todayhot_user_session where time > ?">>,
     {ok, _, Data1}  = mysql_poolboy:query(?POOL, Sql1, [Now]),
 
     Fun = fun([Account, UserName, Password, SourceList], Acc) ->

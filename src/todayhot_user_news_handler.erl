@@ -14,7 +14,7 @@ init(Req0, State) ->
 			Cookies = cowboy_req:parse_cookies(Req0),
 			Param = cowboy_req:parse_qs(Req0),
 			{_, SessionId} = lists:keyfind(<<"sessionid">>, 1, Cookies),
-			handler(Param, SessionId, Req0);
+			handle(Param, SessionId, Req0);
 		<<"POST">> ->
 			cowboy_req:reply(405, Req0)
 	end,
@@ -57,7 +57,7 @@ get_page_news(MinId, Nodes, PageSize, TimeZero, Today) ->
 	{TodayNewsL, IsDone, NTimeZero} = do_get_page_news(MinId, Nodes, PageSize, TimeZero, EtsName, [], ?false),
 	{lists:keysort(#todayhot_news.id, TodayNewsL), IsDone, NTimeZero} .
 
-do_get_page_news(_MinId, _Nodes, _PageSize, TimeZero, _EtsName, NewsL, Loop, _) when Loop > 1 ->	
+do_get_page_news(_MinId, _Nodes, _PageSize, TimeZero, _EtsName, NewsL, Loop) when Loop > 1 ->	
 	{NewsL, true, TimeZero};
 do_get_page_news(MinId, Nodes, PageSize, TimeZero, EtsName, CNewsL, Loop) ->	
 	Fun = fun(NodeId, Acc) ->
@@ -75,7 +75,7 @@ do_get_page_news(MinId, Nodes, PageSize, TimeZero, EtsName, CNewsL, Loop) ->
 		true ->
 			{TNewsL, IsDone, TimeZero};
 		_ ->
-			do_get_page_news(MinId, ClassId, PageSize - Len, TimeZero-86400, ?ETS_TODAYHOT_NEWS, TNewsL, Loop+1)
+			do_get_page_news(MinId, Nodes, PageSize - Len, TimeZero-86400, ?ETS_TODAYHOT_NEWS, TNewsL, Loop+1)
 	end.
 
 get_class_news([], _, _, NewsL) -> {NewsL, true};

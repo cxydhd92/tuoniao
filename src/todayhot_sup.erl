@@ -34,6 +34,7 @@ init([]) ->
         ,?CHILD(mgr_db, worker)
         ,?CHILD(mgr_todayhot, worker)
         ,?CHILD(mgr_source, worker)
+        ,?CHILD(mgr_user, worker)
     ],
     ?INFO("finish todayhot_sup",[]),
     {ok, { {one_for_one, 10, 10}, ChildSpecs} }.

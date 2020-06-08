@@ -40,7 +40,9 @@ init(Args) ->
             ,create_todayhot_node()
             ,create_todayhot_user_cfg_node()
             ,create_todayhot_news()
-            ,create_todayhot_node_hotlist();
+            ,create_todayhot_node_hotlist()
+            ,create_todayhot_user()
+            ,create_todayhot_user_session();
         _ ->
             ignored
     end,
@@ -190,7 +192,7 @@ create_todayhot_user_session() ->
         `account` varchar(50) NOT NULL COMMENT '用户账号', 
         `session` varchar(100) NOT NULL  COMMENT '',
         `time` INT(11) NOT NULL  COMMENT '过期时间',
-        PRIMARY KEY ( `id` )
+        PRIMARY KEY ( `account` )
         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; "/utf8
     >>,
     ok  = mysql_poolboy:query(?POOL, Sql),

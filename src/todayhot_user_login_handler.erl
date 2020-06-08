@@ -72,7 +72,7 @@ do_handle(PostVals, Req) ->
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
 		    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),
 			{NReply, NReq} = case Ret of
-				{ok, SessionID, Time, SourceL} ->
+				{ok, SessionID, Time} ->
 					Reply = jsx:encode([{code, 0}]),
 					Req4 = cowboy_req:set_resp_cookie(<<"sessionid">>, SessionID, Req3, #{max_age => Time}),
 					{Reply, Req4};
@@ -85,8 +85,11 @@ do_handle(PostVals, Req) ->
 				{false, exist} ->
 					Reply = jsx:encode([{code, 2}]),
 					{Reply, Req3};
-				{false, login} ->
+				{false, password} ->
 					Reply = jsx:encode([{code, 3}]),
+					{Reply, Req3};
+				{false, login} ->
+					Reply = jsx:encode([{code, 4}]),
 					{Reply, Req3}
 			end,
 			

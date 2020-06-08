@@ -1,5 +1,5 @@
 % 用户源节点信息
--module(todayhot_nodeid_handler).
+-module(todayhot_user_nodeid_handler).
 
 -export([init/2]).
 
@@ -9,10 +9,11 @@
 -include("cfg_news_class.hrl").
 init(Req0, State) ->
 	Method = cowboy_req:method(Req0),
-	% ?INFO(" Req0~w	",[Req0]),
+	?INFO(" Req0~w	",[Req0]),
 	Req1 = case Method of
 		<<"GET">> ->
 			Cookies = cowboy_req:parse_cookies(Req0),
+			?INFO("xxxxxCoo~w",[Cookies]),
 			{_, SessionId} = lists:keyfind(<<"sessionid">>, 1, Cookies),
 			handle(SessionId, Req0);
 		<<"POST">> ->
@@ -27,7 +28,7 @@ handle(SessionId, Req) ->
 			List = api_user:get_rss_list(Account),
 			case List of
 				false -> 
-					Reply = jsx:encode([{code, 4}]),
+					Reply = jsx:encode([{code, 5}]),
 					Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 				    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
 				    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),
@@ -43,7 +44,7 @@ handle(SessionId, Req) ->
 					end
 			end;
 		_ ->
-			Reply = jsx:encode([{code, 4}]),
+			Reply = jsx:encode([{code, 5}]),
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
 		    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),
@@ -60,7 +61,7 @@ do_handle(Ids, Req) ->
 	Fun = fun({IClassId, NodeIds}, TAcc) ->
 		#cfg_news_class{name = ClassName} = cfg_news_class:get(IClassId),
 		Fun1 = fun(NodeId, Acc) ->
-			#cfg_news_source{source_id=SourceId, name = Name, icon_name=IconName, is_top = IsTop} = cfg_news_source:get(NodeId),
+			#cfg_news_source{source_id=SourceId, name = Name, icon_name=IconName} = cfg_news_source:get(NodeId),
 			[[{node_id, SourceId},{name, Name}, {icon_name, IconName}, {desc, <<"给你最好看的"/utf8>>}]|Acc]
 		end,
 		Datas = lists:foldl(Fun1, [], NodeIds),

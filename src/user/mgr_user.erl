@@ -9,7 +9,7 @@
 -include("todayhot.hrl").
 -include("cfg_news_class.hrl").
 -include("cfg_news_source.hrl").
--define(db_sec, 3600).
+-define(db_sec, 600).
 %% ------------------------------------------------------------------
 %% API Function Exports
 %% ------------------------------------------------------------------
@@ -48,6 +48,7 @@ send(Msg) ->
 
 init(_Args) ->
 	erlang:process_flag(trap_exit, true),
+	?INFO("start mgr_user",[]),
 	ets:new(?ETS_TODAYHOT_USER, [named_table, {keypos, #todayhot_user.account}]),
 	ets:new(?ETS_TODAYHOT_USER_SESSION, [named_table, {keypos, #todayhot_user_session.session}]),
     {UserL, UserSessionL} = dao_user:load(),
@@ -59,10 +60,10 @@ init(_Args) ->
 
 handle_call(Request, From, State) ->
 	case catch do_handle_call(Request, From, State) of
-		{reply, Reply, State} ->
-			{reply, Reply, State};
+		{reply, Reply, NState} ->
+			{reply, Reply, NState};
 		Reason ->
-			?ERR("mgr_tmt Request ~w Reason ~w",[Request, Reason]),
+			?ERR("mgr_user Request ~w Reason ~w",[Request, Reason]),
 			{reply, error, State}
 	end.
 
@@ -71,7 +72,7 @@ handle_cast(Msg, State) ->
 		{noreply, NState} ->
 			{noreply, NState};
 		Reason ->
-			?ERR("mgr_tmt Request ~w Reason ~w",[Msg, Reason]),
+			?ERR("mgr_user Request ~w Reason ~w",[Msg, Reason]),
 			{noreply, State}
 	end.
 
@@ -80,7 +81,7 @@ handle_info(Info, State) ->
 		{noreply, NState} ->
 			{noreply, NState};
 		Reason ->
-			?ERR("mgr_tmt Request ~w Reason ~w",[Info, Reason]),
+			?ERR("mgr_user Request ~w Reason ~w",[Info, Reason]),
 			{noreply, State}
 	end.
 
@@ -93,7 +94,7 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Internal Function Definitions
 %% ------------------------------------------------------------------
-do_handle_call({add_account, {Account, Password}}, _From, State=#mgr_user{changes=Changes, session_change=SessionChanges}) ->
+do_handle_call({add_account, Account, Password}, _From, State=#mgr_user{changes=Changes, session_change=SessionChanges}) ->
 	ets:insert(?ETS_TODAYHOT_USER, #todayhot_user{account=Account, password=Password}),
 	NChanges = [#todayhot_user{account=Account, password=Password}|Changes],
 	Time = util:now()+?d_s(30),

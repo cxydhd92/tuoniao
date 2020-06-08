@@ -22,7 +22,7 @@ char_list() ->
 
 check_password(Password) ->
 	PasswordL = unicode:characters_to_list(Password, utf8),
-	case length(PasswordL) < 20 of
+	case length(PasswordL) >= 6 andalso length(PasswordL) < 20 of
 		true -> 
 			check_password(PasswordL, char_list());
 		_ -> false
@@ -40,7 +40,8 @@ check_account(Account) ->
 
 %% 用户账号检测
 check_account(length, Account) ->
-	case unicode:characters_to_list(Account, utf8) < 10 of
+	CL = unicode:characters_to_list(Account, utf8),
+	case length(CL) > 0 andalso length(CL) < 10 of
 		true -> true;
 		_ -> {false, length}
 	end;
@@ -66,7 +67,7 @@ check_account([P|T], Account) ->
 
 %% 
 add_account(Account, Password) ->
-	{ok, SessionId, Time} = mgr_user:call(add_account, {Account, Password}),
+	{ok, SessionId, Time} = mgr_user:call({add_account, Account, Password}),
 	{ok, SessionId, Time}.
 
 get_rss_list(Account) ->
