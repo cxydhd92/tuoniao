@@ -36,6 +36,7 @@ routes() ->
             ,{"/api/node/hotlist", todayhot_node_hotlist_handler, []}
             ,{"/api/user/login", todayhot_user_login_handler, []}
             ,{"/api/user/nodes", todayhot_user_nodeid_handler, []}
+            ,{"/api/user/news", todayhot_user_news_handler, []}
            ]}
     ].
  

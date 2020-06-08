@@ -14,7 +14,7 @@
 %% API Function Exports
 %% ------------------------------------------------------------------
 -record(mgr_user, {
-	change = []           %% 
+	changes = []           %% 
 	,session_change = []  %% 
 }).
  
@@ -100,15 +100,15 @@ do_handle_call({add_account, {Account, Password}}, _From, State=#mgr_user{change
 	SessionID = base64:encode(crypto:strong_rand_bytes(32)),
 	insert_session(Account, SessionID, Time),
 	NSessionChanges = [#todayhot_user_session{account=Account, session=SessionID, time = Time}|SessionChanges],
-    {reply, {ok, SessionID, ?d_s(30)}, State#mgr_user{changes = NChanges, session_change=NSessionChanges}}.
+    {reply, {ok, SessionID, ?d_s(30)}, State#mgr_user{changes = NChanges, session_change=NSessionChanges}};
 do_handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
 do_handle_cast(_Msg, State)->
 	{noreply, State}.
 
-do_handle_info(up_db, State=#mgr_user{changes = Changes, aid=AId, session_change=SessionChanges}) ->
-	dao_todayhot:up_user_db(Changes, AId),
+do_handle_info(up_db, State=#mgr_user{changes = Changes, session_change=SessionChanges}) ->
+	dao_todayhot:up_user_db(Changes),
 	dao_todayhot:up_user_session_db(SessionChanges),
 	erlang:send_after(?db_sec*1000, self(), up_db),
 	{noreply, State#mgr_user{changes=[], session_change=[]}};

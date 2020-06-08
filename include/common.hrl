@@ -7,7 +7,7 @@
 -define(ERR(Farmat, Args), lager:log(error, [], "**[~w:~w/~w:~w]"++Farmat, [?MODULE,?FUNCTION_NAME, ?FUNCTION_ARITY,?LINE|Args])).
 -define(ERR(Farmat), ?ERR(Farmat, [])).
 
-
+-define(d_s(D), D*86400).
 
 -define(b2l(B), binary_to_list(B)).
 -define(l2b(L), list_to_binary(L)).

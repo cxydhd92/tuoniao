@@ -76,7 +76,7 @@
 -define(todayhot_user_session_ver, 1).
 -record(todayhot_user_session, {
     ver = ?todayhot_user_session_ver
-    ,session_id = 1      %% 
+    ,session = 1      %% 
     ,account = 0     
     ,time = 0            %% 到期时间
 }).

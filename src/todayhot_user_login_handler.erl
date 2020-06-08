@@ -47,7 +47,7 @@ login_account(Account, Password) ->
 			SessionID = base64:encode(crypto:strong_rand_bytes(32)),
 			Time = util:now()+?d_s(30),
 			mgr_user:send({up_session, Account, SessionID, Time}),
-			{ok, SessionId, ?d_s(30)};
+			{ok, SessionID, ?d_s(30)};
 		_ ->
 			{false, login}
 	end.
@@ -60,7 +60,8 @@ do_handle(PostVals, Req) ->
 	Password = proplists:get_value(<<"password">>, PostVals, undefined),
 
 	% ?INFO("ClassId ~w MinId ~w PageSize ~w",[ClassId, MinId, PageSize]),
-	case is_bitstring(Account) andalso is_bitstring(Password) andalso is_integer(IsReg) ->
+	case is_bitstring(Account) andalso is_bitstring(Password) andalso is_integer(IsReg) of
+		true->
 			Ret = case IsReg of
 				?true -> %% 注册
 					create_account(Account, Password);
@@ -70,7 +71,7 @@ do_handle(PostVals, Req) ->
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
 		    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),
-			{NReply, NReq} = case Reg of
+			{NReply, NReq} = case Ret of
 				{ok, SessionID, Time, SourceL} ->
 					Reply = jsx:encode([{code, 0}]),
 					Req4 = cowboy_req:set_resp_cookie(<<"sessionid">>, SessionID, Req3, #{max_age => Time}),

@@ -18,7 +18,7 @@ load() ->
     end,
     UserL = lists:foldl(Fun, [], Data),
     Fun1 = fun([Account, SessionId, Time], Acc) ->
-        [#todayhot_user_session{account = Account, session_id = SessionId, time = Time}|Acc]
+        [#todayhot_user_session{account = Account, session = SessionId, time = Time}|Acc]
     end,
     UserSessionL = lists:foldl(Fun1, [], Data1),
     {UserL, UserSessionL}.
@@ -44,7 +44,7 @@ up_user_db(Changes) ->
 
 up_session_db([]) -> ok;
 up_session_db(SessionL) ->
-    Fun = fun(#todayhot_user_session{account=Account, session_id = SessionId, time = Time}, NewsAcc) ->
+    Fun = fun(#todayhot_user_session{account=Account, session = SessionId, time = Time}, NewsAcc) ->
         [Account, SessionId, Time | NewsAcc]
     end,
     NewNodeL = lists:foldl(Fun, [], SessionL),

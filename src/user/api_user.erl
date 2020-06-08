@@ -1,12 +1,15 @@
 -module(api_user).
 -include("common.hrl").
 -include("todayhot.hrl").
+-include("cfg_news_source.hrl").
 -export([
-		add_user/2
-		,add_user_session/2
+		add_account/2
+
 		,check_account/1
 		,check_password/1
 		,char_list/0
+		,get_rss_list/1
+		,get_rss_class/1
 ]).
 
 char_list() ->
@@ -43,18 +46,17 @@ check_account(length, Account) ->
 	end;
 check_account(char, Account) when is_list(Account) ->
     %name_banned_valid(list_to_bitstring(Text));
-    check_account(char, unicode:characters_to_binary(Text, utf8));
+    check_account(char, unicode:characters_to_binary(Account, utf8));
 check_account(char, Account) when is_bitstring(Account) ->
     case re:run(Account, "[^a-zA-Z0-9]", [{capture, none}, caseless, unicode]) of
         match -> {false, char};  %% 含有非法字符 
         nomatch -> true
     end;
 check_account(exist, Account) ->
-    case ets:lookup(Account, #todayhot_user.account, ?ETS_TODAYHOT_USER) of
+    case ets:lookup(?ETS_TODAYHOT_USER, Account) of
         [_] -> {false, exist}; 
         [] -> true
-    end.
-
+    end;
 check_account([], _) -> true;
 check_account([P|T], Account) ->
 	case check_account(P, Account) of
@@ -64,6 +66,26 @@ check_account([P|T], Account) ->
 
 %% 
 add_account(Account, Password) ->
-	{ok, SessionId, Time} = mgr_user:call(add_account, {Account, Password}) of
+	{ok, SessionId, Time} = mgr_user:call(add_account, {Account, Password}),
 	{ok, SessionId, Time}.
 
+get_rss_list(Account) ->
+	case ets:lookup(?ETS_TODAYHOT_USER, Account) of
+        [#todayhot_user{source_list = SourceList}] -> SourceList; 
+        _ -> false
+    end.
+
+get_rss_class(SourceList) ->
+	Fun = fun(#todayhot_user_source{id=Id}, Acc) ->
+		case cfg_news_source:get(Id) of
+			#cfg_news_source{class = Class} ->
+				case lists:keyfind(Class, 1, Acc) of
+					{_, CIds} ->
+						[{Class, [Id|CIds]}|lists:keydelete(Class, 1, Acc)];
+					_ ->
+						[{Class, [Id]}|Acc]
+				end;
+			_ -> Acc
+		end
+	end,
+	lists:foldl(Fun, [], SourceList).

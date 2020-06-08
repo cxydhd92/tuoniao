@@ -1,4 +1,4 @@
-%% 指定类型下所有源节点信息
+% 用户源节点信息
 -module(todayhot_nodeid_handler).
 
 -export([init/2]).
@@ -13,29 +13,60 @@ init(Req0, State) ->
 	Req1 = case Method of
 		<<"GET">> ->
 			Cookies = cowboy_req:parse_cookies(Req0),
-			{_, SessionId} = lists:keyfind(<<"sessionid">>, 1, Cookies).
-			do_handler(SessionId, Req0);
+			{_, SessionId} = lists:keyfind(<<"sessionid">>, 1, Cookies),
+			handle(SessionId, Req0);
 		<<"POST">> ->
 			cowboy_req:reply(405, Req0)
 	end,
 	{ok, Req1, State}.
 
-do_handler(_, Req) ->
-	Fun = fun(IClassId, TAcc) ->
+handle(SessionId, Req) ->
+	Now = util:now(),
+	case ets:lookup(?ETS_TODAYHOT_USER_SESSION, SessionId) of
+		[#todayhot_user_session{account = Account, time = EndTime}] when EndTime > Now ->
+			List = api_user:get_rss_list(Account),
+			case List of
+				false -> 
+					Reply = jsx:encode([{code, 4}]),
+					Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
+				    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
+				    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),
+					{ok, cowboy_req:reply(200, #{
+						<<"content-type">> => <<"application/json; charset=utf-8">>
+					}, Reply, Req3)};
+				_ ->
+					case catch do_handle(List, Req) of
+						{ok,  Reply} -> Reply;
+						_Err ->
+							?ERR("_Err ~w",[_Err]),
+							cowboy_req:reply(405, Req)
+					end
+			end;
+		_ ->
+			Reply = jsx:encode([{code, 4}]),
+			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
+		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
+		    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),
+			{ok, cowboy_req:reply(200, #{
+				<<"content-type">> => <<"application/json; charset=utf-8">>
+			}, Reply, Req3)}
+	end.
+	% ?INFO("Param~w",[Param]),
+	
+
+
+do_handle(Ids, Req) ->
+	ClassIds = api_user:get_rss_class(Ids),
+	Fun = fun({IClassId, NodeIds}, TAcc) ->
 		#cfg_news_class{name = ClassName} = cfg_news_class:get(IClassId),
-		case cfg_news_source:news_source_class(IClassId) of
-			NodeIds = [_|_] ->
-				Fun1 = fun(NodeId, Acc) ->
-					#cfg_news_source{source_id=SourceId, name = Name, icon_name=IconName, is_top = IsTop} = cfg_news_source:get(NodeId),
-					[[{node_id, SourceId},{name, Name}, {icon_name, IconName}, {is_top, IsTop}, {desc, <<"给你最好看的"/utf8>>}]|Acc]
-				end,
-				Datas = lists:foldl(Fun1, [], NodeIds),
-				[[{class_id, IClassId}, {class_name, ClassName}, {nodes, Datas}]|TAcc];
-			_ ->
-				TAcc
-		end
+		Fun1 = fun(NodeId, Acc) ->
+			#cfg_news_source{source_id=SourceId, name = Name, icon_name=IconName, is_top = IsTop} = cfg_news_source:get(NodeId),
+			[[{node_id, SourceId},{name, Name}, {icon_name, IconName}, {desc, <<"给你最好看的"/utf8>>}]|Acc]
+		end,
+		Datas = lists:foldl(Fun1, [], NodeIds),
+		[[{class_id, IClassId}, {class_name, ClassName}, {nodes, Datas}]|TAcc]
 	end,
-	ClassL = lists:foldl(Fun, [], cfg_news_class:list_key()),
+	ClassL = lists:foldl(Fun, [], ClassIds),
 	Reply = jsx:encode([{data, ClassL}]),
 	Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
     Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
