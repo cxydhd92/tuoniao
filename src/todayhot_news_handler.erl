@@ -69,7 +69,7 @@ do_handle(PostVals, Req) ->
 	MinId = ?l2i(?b2l(proplists:get_value(<<"min_id">>, PostVals, <<"0">>))),
 	PageSize = ?l2i(?b2l(proplists:get_value(<<"page_size">>, PostVals, <<"50">>))),
 	TimeZero = ?l2i(?b2l(proplists:get_value(<<"time">>, PostVals, <<"0">>))),
-
+	Ids = api_user:user_rss_ids(Req),
 	% ?INFO("ClassId ~w MinId ~w PageSize ~w",[ClassId, MinId, PageSize]),
 	case is_integer(ClassId) andalso is_integer(MinId) andalso is_integer(PageSize) andalso is_integer(TimeZero) of
 		true when ClassId > 0 andalso PageSize > 0 ->
@@ -80,7 +80,8 @@ do_handle(PostVals, Req) ->
 				[#todayhot_news{id=NId}|_] ->
 					Fun  = fun(#todayhot_news{id=Id, node_id = NodeId, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
 						#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
-						[[{id, Id},{node_id, NodeId}, {node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+						IsRss = ?IF(lists:member(NodeId, Ids), ?true, ?false),
+						[[{id, Id},{node_id, NodeId}, {is_rss, IsRss}, {node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
 					end,
 					{lists:foldl(Fun, [], PageNewsL), NId};
 				_ ->

@@ -121,9 +121,14 @@ do_handle_info({up_session, Account, SessionID, Time}, State=#mgr_user{session_c
 	insert_session(Account, SessionID, Time),
 	NSessionChanges = [#todayhot_user_session{account=Account, session=SessionID, time = Time}|lists:keydelete(Account, #todayhot_user_session.account, SessionChanges)],
 	{noreply, State#mgr_user{session_change=NSessionChanges}};
-do_handle_info({add_rss, Account, SourceId}, State=#mgr_user{changes = Changes}) ->
+do_handle_info({add_rss, Account, SourceId, IsCancel}, State=#mgr_user{changes = Changes}) ->
 	TUser = #todayhot_user{source_list = SourceList} = get_user(Account),
-	NTUser = TUser#todayhot_user{source_list = [#todayhot_user_source{id=SourceId, time=util:now()}|lists:keydelete(SourceId, #todayhot_user_source.id, SourceList)]},
+	NTUser = case IsCancel of
+		?true ->
+			TUser#todayhot_user{source_list = lists:keydelete(SourceId, #todayhot_user_source.id, SourceList)};
+		_ ->
+			TUser#todayhot_user{source_list = [#todayhot_user_source{id=SourceId, time=util:now()}|lists:keydelete(SourceId, #todayhot_user_source.id, SourceList)]}
+	end,
 	ets:insert(?ETS_TODAYHOT_USER, NTUser),
 	NChanges = [NTUser|lists:keydelete(SourceId, #todayhot_user_source.id, Changes)],
 	{noreply, State#mgr_user{changes=NChanges}};

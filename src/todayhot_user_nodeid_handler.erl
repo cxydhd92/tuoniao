@@ -77,7 +77,7 @@ do_handle(Ids, Req) ->
 		[[{class_id, IClassId}, {class_name, ClassName}, {nodes, Datas}]|TAcc]
 	end,
 	ClassL = lists:foldl(Fun, [], ClassIds),
-	Reply = jsx:encode([{data, ClassL}]),
+	Reply = jsx:encode([{data, ClassL}, {code, 0}]),
 	Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
     Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
     Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),

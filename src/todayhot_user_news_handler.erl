@@ -132,7 +132,7 @@ do_handle(List, Param, Req) ->
 			% Data = [{data, NNewsL}],
 			% ?INFO("NNewsL~w", [length(NNewsL)]),
 			NextTime = ?IF(IsDone, NTimeZero-86400, NTimeZero), 
-			Reply = jsx:encode([{data, NNewsL}, {next_time, NextTime}, {next_id, NNId}]),
+			Reply = jsx:encode([{data, NNewsL}, {next_time, NextTime}, {next_id, NNId}, {code, 0}]),
 			% ?INFO("Reply ~w",[Reply]),
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),

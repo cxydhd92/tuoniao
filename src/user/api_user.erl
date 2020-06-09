@@ -11,11 +11,28 @@
 		,get_rss_list/1
 		,get_rss_class/1
 		,add_rss/2
+		,user_rss_ids/1
 ]).
 
-add_rss(Account, Id) ->
-	mgr_user:send({add_rss, Account, Id}).
-	
+user_rss_ids(Req0) ->
+	Now = util:now(),
+	Cookies = cowboy_req:parse_cookies(Req0),
+	case lists:keyfind(<<"sessionid">>, 1, Cookies) of
+		{_, SessionId} ->
+			case ets:lookup(?ETS_TODAYHOT_USER_SESSION, SessionId) of
+				[#todayhot_user_session{account = Account, time = EndTime}] when EndTime > Now ->
+					List = api_user:get_rss_list(Account),
+					[Id||#todayhot_user_source{id = Id}<-List];
+				_ ->
+					[]
+			end;
+		_ ->
+			[]
+	end.
+
+add_rss(Account, Id, IsCancel) ->
+	mgr_user:send({add_rss, Account, Id, IsCancel}).
+
 char_list() ->
     [
         $a,$b,$c,$d,$e,$f,$g,$h,$i,$j,$k,$l,$m,$n,$o,$p,$q,$r,$s,$t,$u,$v,$w,$x,$y,$z,

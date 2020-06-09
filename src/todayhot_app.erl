@@ -38,6 +38,7 @@ routes() ->
             ,{"/api/user/nodes", todayhot_user_nodeid_handler, []}
             ,{"/api/user/news", todayhot_user_news_handler, []}
             ,{"/api/user/addrss", todayhot_user_addrss_handler, []}
+            ,{"/api/user/info", todayhot_user_info_handler, []}
            ]}
     ].
  

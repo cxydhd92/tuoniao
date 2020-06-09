@@ -20,13 +20,15 @@ init(Req0, State) ->
 	{ok, Req1, State}.
 
 handle_get(_, Req) ->
+	Ids = api_user:user_rss_ids(Req),
 	Fun = fun(IClassId, TAcc) ->
 		#cfg_news_class{name = ClassName} = cfg_news_class:get(IClassId),
 		case cfg_news_source:news_source_class(IClassId) of
 			NodeIds = [_|_] ->
 				Fun1 = fun(NodeId, Acc) ->
 					#cfg_news_source{source_id=SourceId, name = Name, icon_name=IconName} = cfg_news_source:get(NodeId),
-					[[{node_id, SourceId},{name, Name}, {icon_name, IconName}, {desc, <<"给你最好看的"/utf8>>}]|Acc]
+					IsRss = ?IF(lists:member(NodeId, Ids), ?true, ?false),
+					[[{node_id, SourceId},{name, Name}, {is_rss, IsRss}, {icon_name, IconName}, {desc, <<"给你最好看的"/utf8>>}]|Acc]
 				end,
 				Datas = lists:foldl(Fun1, [], NodeIds),
 				[[{class_id, IClassId}, {class_name, ClassName}, {nodes, Datas}]|TAcc];
