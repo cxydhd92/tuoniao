@@ -7,7 +7,12 @@ date_format/2
 ,ceil/1
 ,today/1
 ,timestamp_to_datetime1/1
+,md5/1
 ]).
+
+md5(S) ->
+    list_to_binary([io_lib:format("~2.16.0b",[N])|| N <- binary_to_list(erlang:md5(S))]).
+
 
 get_month(MonthStr) ->
     MonthL = [{"Jan", 1}, {"Feb", 2}, {"Mar", 3}, {"Apr", 4}, {"May", 5}, {"Jun", 6}, {"Jul", 7}, {"Aug", 8}, {"Sep", 9}, {"Oct", 10}, {"Nov", 11}, {"Dec", 12}],

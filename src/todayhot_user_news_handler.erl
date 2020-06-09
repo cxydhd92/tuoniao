@@ -9,16 +9,26 @@
 init(Req0, State) ->
 	Method = cowboy_req:method(Req0),
 	% ?INFO(" Req0~w	",[Req0]),
-	Req1 = case Method of
+	NReq = case Method of
 		<<"GET">> ->
 			Cookies = cowboy_req:parse_cookies(Req0),
-			Param = cowboy_req:parse_qs(Req0),
-			{_, SessionId} = lists:keyfind(<<"sessionid">>, 1, Cookies),
-			handle(Param, SessionId, Req0);
+			case lists:keyfind(<<"sessionid">>, 1, Cookies) of
+				{_, SessionId} ->
+					Param = cowboy_req:parse_qs(Req0),
+					handle(Param, SessionId, Req0);
+				_ ->
+					Reply = jsx:encode([{code, 5}]),
+					Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req0),
+				    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
+				    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),
+					cowboy_req:reply(200, #{
+						<<"content-type">> => <<"application/json; charset=utf-8">>
+					}, Reply, Req3)
+			end;
 		<<"POST">> ->
 			cowboy_req:reply(405, Req0)
 	end,
-	{ok, Req1, State}.
+	{ok, NReq, State}.
 
 handle(Param, SessionId, Req) ->
 	Now = util:now(),
@@ -27,13 +37,13 @@ handle(Param, SessionId, Req) ->
 			List = api_user:get_rss_list(Account),
 			case List of
 				false -> 
-					Reply = jsx:encode([{code, 4}]),
+					Reply = jsx:encode([{code, 5}]),
 					Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 				    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
 				    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),
-					{ok, cowboy_req:reply(200, #{
+					cowboy_req:reply(200, #{
 						<<"content-type">> => <<"application/json; charset=utf-8">>
-					}, Reply, Req3)};
+					}, Reply, Req3);
 				_ ->
 					case catch do_handle(List, Param, Req) of
 						{ok,  Reply} -> Reply;
@@ -43,13 +53,13 @@ handle(Param, SessionId, Req) ->
 					end
 			end;
 		_ ->
-			Reply = jsx:encode([{code, 4}]),
+			Reply = jsx:encode([{code, 5}]),
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
 		    Req3 = cowboy_req:set_resp_header(<<"access-control-allow-headers">>, <<"content-type">>, Req2),
-			{ok, cowboy_req:reply(200, #{
+			cowboy_req:reply(200, #{
 				<<"content-type">> => <<"application/json; charset=utf-8">>
-			}, Reply, Req3)}
+			}, Reply, Req3)
 	end.
 
 get_page_news(MinId, Nodes, PageSize, TimeZero, Today) ->
@@ -102,7 +112,7 @@ do_handle(List, Param, Req) ->
 	PageSize = ?l2i(?b2l(proplists:get_value(<<"page_size">>, Param, <<"50">>))),
 	TimeZero = ?l2i(?b2l(proplists:get_value(<<"time">>, Param, <<"0">>))),
 
-	% ?INFO("ClassId ~w MinId ~w PageSize ~w",[ClassId, MinId, PageSize]),
+	?INFO("ClassId ~w ClassIds ~w PageSize ~w",[ClassId, ClassIds, PageSize]),
 	case is_integer(ClassId) andalso is_integer(MinId) andalso is_integer(PageSize) andalso is_integer(TimeZero) andalso (lists:keymember(ClassId, 1, ClassIds) orelse ClassId=:=0) of
 		true when  PageSize > 0 ->
 			Today = util:today(),

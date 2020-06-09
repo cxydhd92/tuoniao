@@ -58,7 +58,7 @@
 -record(todayhot_user, {
     ver = ?todayhot_user_ver
     ,account       %% 用户id
-    ,name  
+    ,name = <<"">>
     ,password
     ,source_list = [] %% 订阅源列表
 }).

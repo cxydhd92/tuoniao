@@ -42,8 +42,9 @@ create_account(Account, Password) ->
 	end.
 
 login_account(Account, Password) ->
+	MPwd = util:md5(Password),
 	case ets:lookup(?ETS_TODAYHOT_USER, Account) of
-		[#todayhot_user{password = Password}] ->
+		[#todayhot_user{password = MPwd}] ->
 			SessionID = base64:encode(crypto:strong_rand_bytes(32)),
 			Time = util:now()+?d_s(30),
 			mgr_user:send({up_session, Account, SessionID, Time}),
