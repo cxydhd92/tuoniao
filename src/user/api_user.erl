@@ -10,7 +10,7 @@
 		,char_list/0
 		,get_rss_list/1
 		,get_rss_class/1
-		,add_rss/2
+		,add_rss/3
 		,user_rss_ids/1
 ]).
 

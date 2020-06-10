@@ -41,6 +41,21 @@ create_account(Account, Password) ->
 			{false, password}
 	end.
 
+login_account(Account, Password, Req) ->
+	Cookies = cowboy_req:parse_cookies(Req),
+	case lists:keyfind(<<"sessionid">>, 1, Cookies) of
+		{_, SessionId} ->
+			Now = util:now(),
+			case ets:lookup(?ETS_TODAYHOT_USER_SESSION, SessionId) of
+				[#todayhot_user_session{account = Account, time = EndTime}] when EndTime > Now ->
+					{ok, exist};
+				_ ->
+					login_account(Account, Password)
+			end;
+		_ ->
+			login_account(Account, Password)
+	end.
+
 login_account(Account, Password) ->
 	MPwd = util:md5(Password),
 	case ets:lookup(?ETS_TODAYHOT_USER, Account) of
@@ -51,6 +66,15 @@ login_account(Account, Password) ->
 			{ok, SessionID, ?d_s(30)};
 		_ ->
 			{false, login}
+	end.
+
+logout_account(_Account, Req) ->
+	Cookies = cowboy_req:parse_cookies(Req),
+	case lists:keyfind(<<"sessionid">>, 1, Cookies) of
+		{_, SessionId} ->
+			{logout, SessionId};
+		_ ->
+			{false, logout}
 	end.
 
 do_handle([], Req) ->
@@ -66,8 +90,10 @@ do_handle(PostVals, Req) ->
 			Ret = case IsReg of
 				?true -> %% 注册
 					create_account(Account, Password);
+				?false ->
+					login_account(Account, Password, Req);
 				_ ->
-					login_account(Account, Password)
+					logout_account(Account, Req)
 			end,
 			Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
 		    Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),
@@ -75,8 +101,18 @@ do_handle(PostVals, Req) ->
 			{NReply, NReq} = case Ret of
 				{ok, SessionID, Time} ->
 					Reply = jsx:encode([{code, 0}]),
-					Req4 = cowboy_req:set_resp_cookie(<<"sessionid">>, SessionID, Req3, #{max_age => Time}),
+					Req4 = cowboy_req:set_resp_cookie(<<"sessionid">>, SessionID, Req3, #{max_age => Time, path => <<"/">>}),
 					{Reply, Req4};
+				{ok, exist} ->
+					Reply = jsx:encode([{code, 0}]),
+					{Reply, Req3};
+				{logout, SessionID} ->
+					Reply = jsx:encode([{code, 0}]),
+					Req4 = cowboy_req:set_resp_cookie(<<"sessionid">>, SessionID, Req3, #{max_age => 0}),
+					{Reply, Req4};
+				{false, logout} ->
+					Reply = jsx:encode([ {code, 5}]),
+					{Reply, Req3};
 				{false, length} ->
 					Reply = jsx:encode([ {code, 1}]),
 					{Reply, Req3};
