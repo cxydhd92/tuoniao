@@ -1219,6 +1219,52 @@ get(50009) ->
 		json_data = <<"{\"nav\"((.|\n)*?)\"}]}"/utf8>>
 	};
 
+get(50010) ->
+	#cfg_news_source{
+		source_id = 50010,
+		class = 5,
+		sub_class = 1,
+		name = <<"英为财情.热门文章"/utf8>>,
+		icon_name = <<"investing"/utf8>>,
+		url = <<"https://cn.investing.com/news/most-popular-news"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://cn.investing.com"/utf8>>,
+		data = <<"<section[\\s]*id=\"leftColumn\"[\\s]*>([\\s\\S]+?)</section>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title=\"([^\"]+?)\""/utf8>>,
+		link_a = <<"<a href=\"([^\"]+?)\" class=\"img\"[\\s]*>"/utf8>>,
+		desc = <<"<p>([\\s\\S]+?)</p>"/utf8>>,
+		author = <<"<span>([\\s\\S]+?)</span>"/utf8>>,
+		img = <<"data-src=\"([^\"]+?)\""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(50011) ->
+	#cfg_news_source{
+		source_id = 50011,
+		class = 5,
+		sub_class = 1,
+		name = <<"英为财情.热门分析"/utf8>>,
+		icon_name = <<"investing"/utf8>>,
+		url = <<"https://cn.investing.com/analysis/most-popular-analysis"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"https://cn.investing.com"/utf8>>,
+		data = <<"<section[\\s]*id=\"leftColumn\"[\\s]*>([\\s\\S]+?)</section>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title=\"([^\"]+?)\""/utf8>>,
+		link_a = <<"<a href=\"([^\"]+?)\" class=\"img\"[\\s]*>"/utf8>>,
+		desc = <<"<p>([\\s\\S]+?)</p>"/utf8>>,
+		author = <<"<span>([\\s\\S]+?)</span>"/utf8>>,
+		img = <<"data-src=\"([^\"]+?)\""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
 get(60001) ->
 	#cfg_news_source{
 		source_id = 60001,
@@ -1531,6 +1577,8 @@ list_key() ->
 		50007,
 		50008,
 		50009,
+		50010,
+		50011,
 		60001,
 		60002,
 		100001,
@@ -1553,7 +1601,7 @@ news_source_class(3) ->
 	[30001,30002,30003,30004];
 
 news_source_class(5) ->
-	[50001,50002,50003,50004,50005,50006,50007,50008,50009];
+	[50001,50002,50003,50004,50005,50006,50007,50008,50009,50010,50011];
 
 news_source_class(6) ->
 	[60001,60002];

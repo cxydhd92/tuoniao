@@ -29,16 +29,15 @@ handle(Param, Req) ->
 	end.
 
 get_page_news(MinId, _ClassId, NodeId, PageSize, TimeZero, Today) ->
-	{EtsName, HotNewsL} = case Today=:=TimeZero of
+	EtsName = case Today=:=TimeZero of
 		true ->
-			Node = ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}),
-			NNewsL = case Node of
-				[#todayhot_node_news{news= NewsL}] ->	NewsL;
-				_ -> []
-			end,
-			{?ETS_TODAYHOT_TODAY, NNewsL};
+			?ETS_TODAYHOT_TODAY;
 		_ ->
-			{?ETS_TODAYHOT_NEWS, []}
+			?ETS_TODAYHOT_NEWS
+	end,
+	HotNewsL = case ets:lookup(?ETS_TODAYHOT_HOTLIST, {NodeId, Today}) of
+		[#todayhot_node_news{news= NewsL}] ->	NewsL;
+		_ -> []
 	end,
 	{TodayNewsL, IsDone, NTimeZero} = do_get_page_news(MinId, NodeId, PageSize, TimeZero, EtsName, HotNewsL, [], ?false),
 	{lists:keysort(#todayhot_news.id, TodayNewsL), IsDone, NTimeZero} .
@@ -70,8 +69,8 @@ get_next_time(TimeZero, NodeId, Num) when Num > 0->
 
 get_class_news([], _, _, NewsL, _) -> {NewsL, true};
 get_class_news(_, _, 0, NewsL, _) -> {NewsL, false};
-get_class_news([TN=#todayhot_news{id = Id}|SortNewsL], MinId, PageSize, NewsL, HotNewsL) when MinId=:=0 orelse Id < MinId ->
-	case lists:keymember(Id, #todayhot_news.id, HotNewsL) of
+get_class_news([TN=#todayhot_news{id = Id, title = Title}|SortNewsL], MinId, PageSize, NewsL, HotNewsL) when MinId=:=0 orelse Id < MinId ->
+	case lists:keymember(Title, #todayhot_news.title, HotNewsL) of
 		true ->
 			get_class_news(SortNewsL, MinId, PageSize, NewsL, HotNewsL);
 		_ ->
