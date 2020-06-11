@@ -3,7 +3,7 @@
 	'class',
 	'sub_class',
 	'name',
-	'icon_name',
+	'summry',
 	'url',
 	'type',
 	'is_top',

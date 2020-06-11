@@ -26,9 +26,9 @@ handle_get(_, Req) ->
 		case cfg_news_source:news_source_class(IClassId) of
 			NodeIds = [_|_] ->
 				Fun1 = fun(NodeId, Acc) ->
-					#cfg_news_source{source_id=SourceId, name = Name, icon_name=IconName} = cfg_news_source:get(NodeId),
+					#cfg_news_source{source_id=SourceId, name = Name, summry=Summry} = cfg_news_source:get(NodeId),
 					IsRss = ?IF(lists:member(NodeId, Ids), ?true, ?false),
-					[[{node_id, SourceId},{name, Name}, {is_rss, IsRss}, {icon_name, IconName}, {desc, <<"给你最好看的"/utf8>>}]|Acc]
+					[[{node_id, SourceId},{name, Name}, {is_rss, IsRss}, {desc, Summry}]|Acc]
 				end,
 				Datas = lists:foldl(Fun1, [], NodeIds),
 				[[{class_id, IClassId}, {class_name, ClassName}, {nodes, Datas}]|TAcc];

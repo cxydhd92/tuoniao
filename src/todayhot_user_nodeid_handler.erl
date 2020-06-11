@@ -70,8 +70,8 @@ do_handle(Ids, Req) ->
 	Fun = fun({IClassId, NodeIds}, TAcc) ->
 		#cfg_news_class{name = ClassName} = cfg_news_class:get(IClassId),
 		Fun1 = fun(NodeId, Acc) ->
-			#cfg_news_source{source_id=SourceId, name = Name, icon_name=IconName} = cfg_news_source:get(NodeId),
-			[[{node_id, SourceId},{name, Name}, {icon_name, IconName}, {desc, <<"给你最好看的"/utf8>>}]|Acc]
+			#cfg_news_source{source_id=SourceId, name = Name, summry=Summry} = cfg_news_source:get(NodeId),
+			[[{node_id, SourceId},{name, Name}, {desc, Summry}]|Acc]
 		end,
 		Datas = lists:foldl(Fun1, [], NodeIds),
 		[[{class_id, IClassId}, {class_name, ClassName}, {nodes, Datas}]|TAcc]

@@ -17,7 +17,7 @@ start() ->
     ok = application:start(ranch),
     ok = application:start(cowlib),
     ok = application:start(cowboy),
-    ok = application:start(iconv),
+    % ok = application:start(iconv),
     ok = application:start(todayhot),
     ?INFO("start run todayhot finish",[]),
     ok.
