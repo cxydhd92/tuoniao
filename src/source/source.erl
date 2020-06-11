@@ -345,16 +345,21 @@ new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCou
 	{TNews, RtItemDescL, RtItemAuthorFL, RtItemImgFL, RtItemCountFL, RtItemTimeL}.
 
 re_title(CTitle) ->
-	UCTitle = unicode:characters_to_list(CTitle),
+	case unicode:characters_to_list(CTitle) of
+		UCTitle when is_list(UCTitle) -> 
+			Fun = fun(C, Acc) ->
+				case lists:member(C, [10,13,32]) of
+					true -> Acc;
+					_ -> Acc ++ [C]
+				end
+			end,
+			TL = lists:foldl(Fun, [], UCTitle),
+			unicode:characters_to_binary(TL);
+		_ ->
+			?l2b(iconv:convert("gbk", "utf-8", ?b2l(CTitle)))
+	end.
 	% ?INFO("CTitle~ts UCTitle~w",[CTitle, UCTitle]),
-	Fun = fun(C, Acc) ->
-		case lists:member(C, [10,13,32]) of
-			true -> Acc;
-			_ -> Acc ++ [C]
-		end
-	end,
-	TL = lists:foldl(Fun, [], UCTitle),
-	unicode:characters_to_binary(TL).
+	
 
 do_parse_html(_Cfg, TodayData, News, TopL, _Now, [], _, _, _, _, _, _) ->
 	{News, TodayData, TopL};
