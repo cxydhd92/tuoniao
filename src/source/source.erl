@@ -346,6 +346,7 @@ new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCou
 
 re_title(CTitle) ->
 	UCTitle = unicode:characters_to_list(CTitle),
+	% ?INFO("CTitle~ts UCTitle~w",[CTitle, UCTitle]),
 	Fun = fun(C, Acc) ->
 		case lists:member(C, [10,13,32]) of
 			true -> Acc;

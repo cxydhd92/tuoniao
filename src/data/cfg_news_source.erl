@@ -726,7 +726,7 @@ get(20021) ->
 		count = <<""/utf8>>,
 		time = <<"publishTime"/utf8>>,
 		time_type = 5,
-		json_data = <<"{\"navigator\"((.|\n)*?)\"userInfo\":null}"/utf8>>
+		json_data = <<"{\"navigator\"((.|\n)*?)\"isCheckedUserInfo\":false}"/utf8>>
 	};
 
 get(20022) ->
@@ -1258,8 +1258,77 @@ get(50011) ->
 		title = <<"title=\"([^\"]+?)\""/utf8>>,
 		link_a = <<"<a href=\"([^\"]+?)\" class=\"img\"[\\s]*>"/utf8>>,
 		desc = <<"<p>([\\s\\S]+?)</p>"/utf8>>,
-		author = <<"<span>([\\s\\S]+?)</span>"/utf8>>,
+		author = <<""/utf8>>,
 		img = <<"data-src=\"([^\"]+?)\""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(50012) ->
+	#cfg_news_source{
+		source_id = 50012,
+		class = 5,
+		sub_class = 1,
+		name = <<"同花顺.财经要闻"/utf8>>,
+		icon_name = <<"10jqka"/utf8>>,
+		url = <<""/utf8>>,
+		type = 2,
+		is_top = 0,
+		link_pre = <<""/utf8>>,
+		data = <<"<span[\\s]*class=\"arc-title\">([\\s\\S]+?)</span>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title=\"([^\"]+?)\""/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(50013) ->
+	#cfg_news_source{
+		source_id = 50013,
+		class = 5,
+		sub_class = 1,
+		name = <<"同花顺.日榜"/utf8>>,
+		icon_name = <<"10jqka"/utf8>>,
+		url = <<""/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<""/utf8>>,
+		data = <<"<ul[\\s]*class=\"item zxrank\">([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<a[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<""/utf8>>,
+		time_type = 0
+	};
+
+get(50014) ->
+	#cfg_news_source{
+		source_id = 50014,
+		class = 2,
+		sub_class = 1,
+		name = <<"股吧.48H热榜"/utf8>>,
+		icon_name = <<"ithome"/utf8>>,
+		url = <<"http://guba.eastmoney.com/"/utf8>>,
+		type = 2,
+		is_top = 1,
+		link_pre = <<"http://guba.eastmoney.com/"/utf8>>,
+		data = <<"48小时股吧热门文章排行</h5>([\\s\\S]+?)</ul>"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"<a href[^>]+?>([\\s\\S]+?)</a>"/utf8>>,
+		link_a = <<"<a href=\"([^\"]+?)\""/utf8>>,
+		desc = <<""/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
 		count = <<""/utf8>>,
 		time = <<""/utf8>>,
 		time_type = 0
@@ -1579,6 +1648,9 @@ list_key() ->
 		50009,
 		50010,
 		50011,
+		50012,
+		50013,
+		50014,
 		60001,
 		60002,
 		100001,
@@ -1601,7 +1673,7 @@ news_source_class(3) ->
 	[30001,30002,30003,30004];
 
 news_source_class(5) ->
-	[50001,50002,50003,50004,50005,50006,50007,50008,50009,50010,50011];
+	[50001,50002,50003,50004,50005,50006,50007,50008,50009,50010,50011,50012,50013,50014];
 
 news_source_class(6) ->
 	[60001,60002];

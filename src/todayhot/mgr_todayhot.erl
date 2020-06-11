@@ -65,6 +65,7 @@ init(_Args) ->
 	Sec = Today+86400 - util:now(),
 	erlang:send_after(Sec*1000, self(), zero_up),
 	?INFO("finish mgr_todayhot",[]),
+	gc_timer(),
     {ok, #mgr_todayhot{aid = MaxId}}.
 
 handle_call(Request, From, State) ->
@@ -138,8 +139,18 @@ do_handle_info({up_news, Class, NodeId, AddNews, Time}, State=#mgr_todayhot{chan
 			{NodeNews, NAId, NAddNews}
     end,		
 	api_todayhot:insert_today(NNode),
-	{noreply, State#mgr_todayhot{aid = NAId1, changes=NChangesL}}.
+	{noreply, State#mgr_todayhot{aid = NAId1, changes=NChangesL}};
+do_handle_info(gc_loop_timer, State=#mgr_todayhot{}) ->
+	erlang:garbage_collect(),
+	?INFO("gc_loop_timer",[]),
+	gc_timer(),
+	{noreply, State};	
+do_handle_info(_Msg, State) ->
+	{noreply, State}.
 
+gc_timer() ->
+	erlang:send_after(900*1000, self(), gc_loop_timer),
+	ok.
 
 add_news(NewsL, Today, NodeIdL, AddNews, AId,Changes) ->
 		Fun = fun(News, {Acc, MaxId, NewsAcc}) ->
