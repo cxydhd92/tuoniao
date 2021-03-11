@@ -27,7 +27,7 @@
 %% gen_server Function Exports
 %% ------------------------------------------------------------------
 
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, restart/0,
          terminate/2, code_change/3]).
 
 %% ------------------------------------------------------------------
@@ -43,6 +43,9 @@ call(Msg) ->
 cast(Msg) ->
 		gen_server:cast(?MODULE, Msg).
 
+restart() ->
+	?MODULE ! restart.
+
 send(Msg) ->
 	?MODULE ! Msg.
 %% ------------------------------------------------------------------
@@ -53,6 +56,7 @@ init(_Args) ->
 	?INFO("start mgr_source",[]),
 	State = alloc(#mgr_source{}),
 	erlang:send_after(3600*1000, self(), alloc),
+	% erlang:send_after(3600*1000*6, self(), restart),
 	?INFO("finish mgr_source",[]),
     {ok, State}.
 
@@ -82,7 +86,6 @@ alloc(SourceId, [{Pid, SL}|List], PList) ->
 		_ ->
 			alloc(SourceId, List, PList)
 	end.
-
 
 handle_call(Request, From, State) ->
 	case catch do_handle_call(Request, From, State) of
@@ -128,10 +131,16 @@ do_handle_cast(_Msg, State)->
 	{noreply, State}.
 
 do_handle_info(alloc, State) ->
-	?INFO("xxxxxxxxxx restart Alloc"),
+	?INFO("xxxxxxxxxx alloc Alloc"),
 	NState = alloc(State),
 	erlang:send_after(3600*1000, self(), alloc),
 	{noreply, NState};	
+do_handle_info(restart, #mgr_source{list = List}) ->
+	?INFO("xxxxxxxxxx restart Alloc"),
+	[source:stop(Pid)||{Pid, _}<-List],
+	State = alloc(#mgr_source{}),
+	% erlang:send_after(3600*1000*6, self(), restart),
+	{noreply, State};	
 do_handle_info(_Msg, State) ->
 	{noreply, State}.
 

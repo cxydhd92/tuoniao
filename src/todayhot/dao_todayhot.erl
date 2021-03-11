@@ -3,25 +3,25 @@
 -include("common.hrl").
 -include("todayhot.hrl").
 
--export([load/0, load_sys_id/0, up_news_db/2, up_db_nodes/1, up_hotlist_db/0]).
+-export([load1/0, load2/0, load3/0, load_sys_id/0, up_news_db/2, up_db_nodes/1, up_hotlist_db/0]).
 
-load() ->
+load1() ->
     Sql = <<"select node_id, count, add_time, users from todayhot_node ">>,
     {ok, _, Data}  = mysql_poolboy:query(?POOL, Sql),
-    Now = util:now(),
-    LimitTime = Now - 90*86400,
-    Sql1 = <<"select id, node_id, class, abstract, title, url, source, count, sub_news, same_id, img, news_time, time from todayhot_news where time>=?">>,
-    {ok, _, Data1}  = mysql_poolboy:query(?POOL, Sql1, [LimitTime]),
-
-    Sql2 = <<"select node_id, zero, news from todayhot_node_hotlist where zero>=?">>,
-    {ok, _, Data2}  = mysql_poolboy:query(?POOL, Sql2, [LimitTime]),
-
-    Today = util:today(),
+    
     Fun = fun([NodeId, Count, Time, Users], Acc) ->
         NUsers = util:bitstring_to_term(Users),
         [#todayhot_nodes{node_id = NodeId, count = Count,  users=NUsers, add_time = Time}|Acc]
     end,
     Nodes = lists:foldl(Fun, [], Data),
+    Nodes.
+
+load2() ->
+    Now = util:now(),
+    LimitTime = Now - 90*86400,
+    Sql1 = <<"select id, node_id, class, abstract, title, url, source, count, sub_news, same_id, img, news_time, time from todayhot_news where time>=?">>,
+    {ok, _, Data1}  = mysql_poolboy:query(?POOL, Sql1, [LimitTime]),
+    Today = util:today(),
     Fun1 = fun([Id, NodeId, Class, Abstract, Title, Url, Source, Count, SubNews, SameId, Img, NewsTime, CTime], {Acc1, AccToday}) ->
         NSubNews = util:bitstring_to_term(SubNews),
         case CTime >= Today of
@@ -35,7 +35,13 @@ load() ->
         end
     end,
     {OL, TL} = lists:foldl(Fun1, {[], []}, Data1),
+    {OL, TL}.
 
+load3() ->
+    Now = util:now(),
+    LimitTime = Now - 90*86400,
+    Sql2 = <<"select node_id, zero, news from todayhot_node_hotlist where zero>=?">>,
+    {ok, _, Data2}  = mysql_poolboy:query(?POOL, Sql2, [LimitTime]),
     Fun2 = fun([NodeId, Zero, News], Acc) ->
         ?INFO("NodeId ~w",[NodeId]),
         case util:bitstring_to_term(News) of
@@ -47,7 +53,7 @@ load() ->
         end
     end,
     HotList = lists:foldl(Fun2, [], Data2),
-    {Nodes, OL, TL, HotList}.
+    HotList.
 
 add_news(Acc, Today, [Id, NodeId, Class, Abstract, Title, Url, Source, Count, SubNews, SameId, NewsTime, CTime, Img]) ->
     case lists:keytake({NodeId, Today}, #todayhot_node_news.node, Acc) of

@@ -150,7 +150,7 @@ do_handle_info(start_spider, State=#source{list = List, titles = TodayData}) ->
 	Now = util:now(),
 	NTodayData = start_spider(List, TodayData, Now),
 	erlang:send_after(?spider_sec*1000, self(), start_spider),
-	self() ! gc_loop_timer,
+	% self() ! gc_loop_timer,
 	{noreply, State#source{titles = NTodayData}};
 do_handle_info(gc_loop_timer, State=#source{}) ->
 	erlang:garbage_collect(),
@@ -169,6 +169,7 @@ start_spider([{SourceId, IsUser}|List], TodayData, Now) ->
 			start_spider_f1([], SourceId, IsUser, Now)
 	end,
 	NTodayData = [{SourceId, lists:sublist(NSubTodayData,100)}|lists:keydelete(SourceId, 1, TodayData)],
+	erlang:garbage_collect(),
 	start_spider(List, NTodayData, Now).
 
 start_spider_f1(TodayData, SourceId, ?false, Now) ->
@@ -221,7 +222,7 @@ new_add_rss(#cfg_news_source{class=Class, source_id=SourceId}, Item, Now) ->
     #todayhot_news{
 		class = Class,
 		node_id = SourceId, title = ?c2b(Title), url=?c2b(TUrl), news_time=NewTime, source=Source, count=Count
-		, abstract = <<"">>, time=Now, img = <<"">>
+		, abstract = [], time=Now, img = <<"">>
 	}.
 
 do_start_spider_rss(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, is_top = IsTop}, TodayData, Now) ->
@@ -340,7 +341,7 @@ new_add_html(Cfg, Title, LinkA, Now, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCou
 	TNews = #todayhot_news{
 		class = Class,
 		node_id = SourceId, title = Title, url=TUrl, news_time=NewTime, source=Source, count=Count
-		, abstract = Abstract, time=Now, img = Img
+		, abstract = unicode:characters_to_binary(lists:sublist(unicode:characters_to_list(Abstract),50)), time=Now, img = Img
 	},
 	{TNews, RtItemDescL, RtItemAuthorFL, RtItemImgFL, RtItemCountFL, RtItemTimeL}.
 
@@ -406,7 +407,7 @@ do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url =
 			?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
 			NTodayData;
 		_Err ->
-			?ERR("Url ~ts fail ~w", [Url, _Err]),
+			?ERR("Url ~ts fail ~w", [NUrl, _Err]),
 			TodayData
 	end.
 
@@ -488,7 +489,7 @@ new_add_json(Cfg, Data) ->
 			#todayhot_news{
 				class = Class,
 				node_id = SourceId, title = Title, url=TUrl, news_time=NewTime, source=Source, count=Count
-				, abstract = Abstract, time=Now, img = Img
+				, abstract = unicode:characters_to_binary(lists:sublist(unicode:characters_to_list(Abstract),50)), time=Now, img = Img
 			};
 		_ ->
 			false

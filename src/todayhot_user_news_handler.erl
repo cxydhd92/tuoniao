@@ -123,7 +123,7 @@ do_handle(List, Param, Req) ->
 				[#todayhot_news{id=NId}|_] ->
 					Fun  = fun(#todayhot_news{id=Id, node_id = NodeId, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
 						#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
-						[[{id, Id},{node_id, NodeId}, {node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+						[[{id, Id},{node_id, NodeId}, {node_name, NodeName},{abstract, unicode:characters_to_binary(Abs)}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
 					end,
 					{lists:foldl(Fun, [], PageNewsL), NId};
 				_ ->

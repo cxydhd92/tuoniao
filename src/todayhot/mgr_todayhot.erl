@@ -54,7 +54,12 @@ init(_Args) ->
 	ets:new(?ETS_TODAYHOT_NEWS, [named_table, {keypos, #todayhot_node_news.node}]),
 	ets:new(?ETS_TODAYHOT_TODAY, [named_table, {keypos, #todayhot_node_news.node}]),
 	ets:new(?ETS_TODAYHOT_HOTLIST, [named_table, {keypos, #todayhot_node_news.node}, public]),
-    {Nodes,Data,TodayData, HotList} = dao_todayhot:load(),
+    Nodes = dao_todayhot:load1(),
+    erlang:garbage_collect(),
+    {Data,TodayData} = dao_todayhot:load2(),
+    erlang:garbage_collect(),
+    HotList = dao_todayhot:load3(),
+    erlang:garbage_collect(),
     MaxId = dao_todayhot:load_sys_id(),
 	ets:insert(?ETS_TODAYHOT, Nodes),
 	ets:insert(?ETS_TODAYHOT_NEWS, Data),
@@ -139,6 +144,7 @@ do_handle_info({up_news, Class, NodeId, AddNews, Time}, State=#mgr_todayhot{chan
 			{NodeNews, NAId, NAddNews}
     end,		
 	api_todayhot:insert_today(NNode),
+	erlang:garbage_collect(),
 	{noreply, State#mgr_todayhot{aid = NAId1, changes=NChangesL}};
 do_handle_info(gc_loop_timer, State=#mgr_todayhot{}) ->
 	erlang:garbage_collect(),
@@ -153,7 +159,7 @@ gc_timer() ->
 	ok.
 
 add_news(NewsL, Today, NodeIdL, AddNews, AId,Changes) ->
-		Fun = fun(News, {Acc, MaxId, NewsAcc}) ->
+		Fun = fun(News=#todayhot_news{abstract = _Abstract}, {Acc, MaxId, NewsAcc}) ->
 				News1 = News#todayhot_news{id=MaxId+1},
 				{News2, TN} = is_same_title(News1, Today, NodeIdL),
 				NAddNewsL = ?IF(TN==false, [News2|NewsAcc], [News2, TN|lists:keydelete(TN#todayhot_news.id, #todayhot_news.id, NewsAcc)]),

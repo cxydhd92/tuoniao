@@ -1006,6 +1006,29 @@ get(20033) ->
 		time_type = 3
 	};
 
+get(20034) ->
+	#cfg_news_source{
+		source_id = 20034,
+		class = 2,
+		sub_class = 1,
+		name = <<"公众号.好机友"/utf8>>,
+		summry = <<"武装你的数字化生活"/utf8>>,
+		url = <<"https://www.waijiedanao.com/api/posts?profile=5d7b034a5ae36f65dcfb3d52&page=1&limit=20"/utf8>>,
+		type = 1,
+		is_top = 0,
+		link_pre = <<""/utf8>>,
+		data = <<"data"/utf8>>,
+		container = <<""/utf8>>,
+		title = <<"title"/utf8>>,
+		link_a = <<"link"/utf8>>,
+		desc = <<"digest"/utf8>>,
+		author = <<""/utf8>>,
+		img = <<""/utf8>>,
+		count = <<""/utf8>>,
+		time = <<"publishAt"/utf8>>,
+		time_type = 3
+	};
+
 get(30001) ->
 	#cfg_news_source{
 		source_id = 30001,

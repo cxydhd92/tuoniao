@@ -98,7 +98,7 @@ do_handle(PostVals, Req) ->
 			{NNewsL, NNId} = case PageNewsL of
 				[#todayhot_news{id=NId}|_] ->
 					Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
-						[[{id, Id},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+						[[{id, Id},{abstract, unicode:characters_to_binary(Abs)}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
 					end,
 					{lists:foldl(Fun, [], PageNewsL), NId};
 				_ ->
