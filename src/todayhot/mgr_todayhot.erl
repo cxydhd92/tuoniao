@@ -7,6 +7,8 @@
 -include("common.hrl").
 -include("todayhot.hrl").
 -include("cfg_news_source.hrl").
+-include("cfg_news_class.hrl").
+
 -define(SERVER, ?MODULE).
 
 -define(db_sec, 30*60).
@@ -54,6 +56,10 @@ init(_Args) ->
 	ets:new(?ETS_TODAYHOT_NEWS, [named_table, {keypos, #todayhot_node_news.node}]),
 	ets:new(?ETS_TODAYHOT_TODAY, [named_table, {keypos, #todayhot_node_news.node}]),
 	ets:new(?ETS_TODAYHOT_HOTLIST, [named_table, {keypos, #todayhot_node_news.node}, public]),
+	ets:new(?ETS_CFG_NODE, [named_table, {keypos, #cfg_news_source.source_id}, public]),
+	ets:new(?ETS_CFG_CLASS, [named_table, {keypos, #cfg_news_class.id}, public]),
+	ets:insert(?ETS_CFG_CLASS, dao_todayhot:load_cfg_class()),
+	ets:insert(?ETS_CFG_NODE, dao_todayhot:load_cfg_node()),
     Nodes = dao_todayhot:load1(),
     erlang:garbage_collect(),
     {Data,TodayData} = dao_todayhot:load2(),
@@ -146,12 +152,30 @@ do_handle_info({up_news, Class, NodeId, AddNews, Time}, State=#mgr_todayhot{chan
 	api_todayhot:insert_today(NNode),
 	erlang:garbage_collect(),
 	{noreply, State#mgr_todayhot{aid = NAId1, changes=NChangesL}};
+do_handle_info({update_cfg_class, Cfg}, State=#mgr_todayhot{}) -> ?INFO("ccccccccccccccccccc"),
+	ets:insert(?ETS_CFG_CLASS, Cfg),
+	dao_todayhot:cfg_class_update(Cfg),
+	{noreply, State};
+do_handle_info({del_cfg_class, CfgId}, State=#mgr_todayhot{}) ->
+	ets:delete(?ETS_CFG_CLASS, CfgId),
+	dao_todayhot:cfg_class_del(CfgId),
+	{noreply, State};
+do_handle_info({update_cfg_node, Cfg}, State=#mgr_todayhot{}) ->
+	?INFO("xxxxxxxxxxxCfg~w",[Cfg]),
+	ets:insert(?ETS_CFG_NODE, Cfg),
+	dao_todayhot:cfg_node_update(Cfg),
+	{noreply, State};
+do_handle_info({del_cfg_node, CfgId}, State=#mgr_todayhot{}) ->
+	ets:delete(?ETS_CFG_NODE, CfgId),
+	dao_todayhot:cfg_node_del(CfgId),
+	{noreply, State};
 do_handle_info(gc_loop_timer, State=#mgr_todayhot{}) ->
 	erlang:garbage_collect(),
 	?INFO("gc_loop_timer",[]),
 	gc_timer(),
 	{noreply, State};	
 do_handle_info(_Msg, State) ->
+	?INFO("xxxxxxxxxxxCfg~w",[_Msg]),
 	{noreply, State}.
 
 gc_timer() ->

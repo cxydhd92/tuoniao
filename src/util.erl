@@ -9,7 +9,28 @@ date_format/2
 ,timestamp_to_datetime1/1
 ,md5/1
 ,allocators/0
+,topN/1
 ]).
+
+topN(N)->
+        BinaryData =  processes_sorted_by_binary(),
+        TotalM = lists:sum([M/1024/1024 ||
+        {_P, M, _B} <- lists:reverse(lists:keysort(2,BinaryData))]),
+        TotalNM = lists:sum([M/1024/1024 ||
+        {_P, M, _B} <- lists:sublist(lists:reverse(lists:keysort(2,BinaryData)),N)]),
+        {TotalM, TotalNM, [{M, P, process_info(P, [registered_name, initial_call,current_function, dictionary]), B} ||
+        {P, M, B} <- lists:sublist(lists:reverse(lists:keysort(2,BinaryData)),N)]}.
+ 
+processes_sorted_by_binary()->
+     [case process_info(P, binary) of
+              {_, Bins} ->
+                 SortedBins = lists:usort(Bins),
+                 {_, Sizes, _} = lists:unzip3(SortedBins),
+                 {P, lists:sum(Sizes), []};
+              _ ->
+                {P, 0, []}
+         end ||P <- processes()].
+
 
 md5(S) ->
     list_to_binary([io_lib:format("~2.16.0b",[N])|| N <- binary_to_list(erlang:md5(S))]).
@@ -47,6 +68,7 @@ date_format(Type, Date) ->
         3 -> atom_date_format(Date);
         4 -> rss_date_format(Date);
         5 -> Date div 1000; %% 毫秒时间戳
+        6 -> wb_date_format(Date);
         _ -> util:now()
     end.
 
@@ -76,6 +98,14 @@ rss_date_format(RssDate) ->
     Time = datetime_to_timestamp({{?l2i(Year), Month, ?l2i(DayStr)}, {Hour, Minu, Sec}}),
     Time + time_zone(Zone).
 
+%% Mon Jul 12 14:25:40 +0800 2021
+wb_date_format(RssDate) ->
+    [_, MonthStr, DayStr, HMS, Zone, Year] =  re:split(RssDate, " ", [{return, list}, {parts, 6}]),
+    Month = get_month(MonthStr),
+    [Hour, Minu, Sec] = get_hour_minu_sec(HMS),
+    Time = datetime_to_timestamp({{?l2i(Year), Month, ?l2i(DayStr)}, {Hour, Minu, Sec}}),
+    Time + time_zone(Zone).
+    
 now() ->
 	{M, S, _} = os:timestamp(),
     M * 1000000 + S.

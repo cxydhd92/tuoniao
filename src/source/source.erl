@@ -14,6 +14,7 @@
 -include_lib("xmerl/include/xmerl.hrl").
 -export([
     start/1, stop/1, call/2, send/2
+	,check/1
 ]).
 
 -export([
@@ -68,7 +69,7 @@ init(Args) ->
     try
         handle_init(Args)
     catch
-        Type : Reason ->
+        Type : Reason : _Stack ->
             ?ERR("init: ~w, error: ~w, reason: ~w", [Args, Type, Reason]),
             {stop, Reason}
     end.
@@ -77,8 +78,8 @@ handle_call(Request, From, State) ->
     try
         do_handle_call(Request, From, State)
     catch
-        Type : Reason ->
-            ?ERR("handle_call: ~w, error: ~w, reason: ~w stacktrace: ~w", [Request, Type, Reason, erlang:get_stacktrace()]),
+        Type : Reason : Stack ->
+            ?ERR("handle_call: ~w, error: ~w, reason: ~w stacktrace: ~w", [Request, Type, Reason, Stack]),
             {reply, false, State}
     end.
 
@@ -86,8 +87,8 @@ handle_cast(Msg, State) ->
     try
         do_handle_cast(Msg, State)
     catch
-        Type : Reason ->
-            ?ERR("handle_cast: ~w, error: ~w, reason: ~w stacktrace: ~w", [Msg, Type, Reason, erlang:get_stacktrace()]),
+        Type : Reason : Stack ->
+            ?ERR("handle_cast: ~w, error: ~w, reason: ~w stacktrace: ~w", [Msg, Type, Reason, Stack]),
             {noreply, State}
     end.
 
@@ -95,8 +96,8 @@ handle_info(Info, State) ->
     try
         do_handle_info(Info, State)
     catch
-        Type : Reason ->
-            ?ERR("handle_info: ~w, error: ~w, reason: ~w stacktrace: ~w", [Info, Type, Reason, erlang:get_stacktrace()]),
+        Type : Reason : Stack ->
+            ?ERR("handle_info: ~w, error: ~w, reason: ~w stacktrace: ~w", [Info, Type, Reason, Stack]),
             {noreply, State}
     end.
 
@@ -104,8 +105,8 @@ terminate(Msg, #source{mgr_pid=MgrPid}) ->
     try
         MgrPid ! {stop, self()}
     catch
-        Type : Reason ->
-            ?ERR("terminate: ~w, error: ~w, reason: ~w stacktrace: ~w", [Msg, Type, Reason, erlang:get_stacktrace()]),
+        Type : Reason : Stack ->
+            ?ERR("terminate: ~w, error: ~w, reason: ~w stacktrace: ~w", [Msg, Type, Reason, Stack]),
             ok
     end.
 
@@ -122,7 +123,7 @@ handle_init([{MgrPid, SourceId, IsUser}]) ->
 	Today = util:today(),
 	% Sec = Today+86400 - util:now(),
 	% erlang:send_after(Sec*1000*3, self(), zero_up),
-	% #cfg_news_source{class = Class} = cfg_news_source:get(SourceId),
+	% #cfg_news_source{class = Class} = api_todayhot:get_node(SourceId),
 	News = api_todayhot:get_node_news_num(SourceId, Today, 100),
 	TitleL = [Title||#todayhot_news{title=Title}<-News],
 	% gc_timer(),
@@ -173,13 +174,14 @@ start_spider([{SourceId, IsUser}|List], TodayData, Now) ->
 	start_spider(List, NTodayData, Now).
 
 start_spider_f1(TodayData, SourceId, ?false, Now) ->
-	case cfg_news_source:get(SourceId) of
-		Cfg = #cfg_news_source{type = Type, url = Url} when Type > 0 andalso Url =/= <<"">> ->
+	case api_todayhot:get_node(SourceId) of
+		Cfg = #cfg_news_source{class = Class, type = Type, url = Url} when Type > 0 andalso Url =/= <<"">> ->
+		   ?IF(lists:member(Class,[12,13,14]), receive after 2000 -> true end, ignored),
 			case catch do_start_spider(Cfg, TodayData, Now) of
 				NTodayData when is_list(NTodayData) ->
 					NTodayData;
 		        _Err ->
-		            ?ERR("SourceId: ~w, reason: ~w stacktrace: ~w", [SourceId, _Err, erlang:get_stacktrace()]),
+		            ?ERR("SourceId: ~w, reason: ~w ", [SourceId, _Err]),
 		            TodayData
 		    end;
 		_ ->
@@ -222,7 +224,7 @@ new_add_rss(#cfg_news_source{class=Class, source_id=SourceId}, Item, Now) ->
     #todayhot_news{
 		class = Class,
 		node_id = SourceId, title = ?c2b(Title), url=?c2b(TUrl), news_time=NewTime, source=Source, count=Count
-		, abstract = [], time=Now, img = <<"">>
+		, abstract = <<"">>, time=Now, img = <<"">>
 	}.
 
 do_start_spider_rss(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url, is_top = IsTop}, TodayData, Now) ->
@@ -385,18 +387,18 @@ do_parse_html(Cfg=#cfg_news_source{is_top = IsTop}, TodayData, News, TopL, Now, 
 			end
 	end.
 
-get_send_url(SourceId, Url, Now) ->
-	case SourceId of
-		10001 ->
+get_send_url(UrlType, Url, Now) ->
+	case UrlType of
+		1 ->
 			?b2l(Url)++?i2l(Now)++".json";
-		_ when SourceId=:=10004;SourceId=:=10008;SourceId=:=30002;SourceId=:=50001;SourceId=:=100001 ->
+		2  ->
 			?b2l(Url) ++ util:timestamp_to_datetime1(Now);
 		_ ->
 			?b2l(Url)
 	end.
 
-do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url,head=Head}, TodayData, Now) ->
-	NUrl = get_send_url(SourceId, Url, Now),
+do_start_spider_json(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url,head=Head, url_type = UrlType}, TodayData, Now) ->
+	NUrl = get_send_url(UrlType, Url, Now),
     case ibrowse:send_req(NUrl, Head++[{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, ResponseBody} ->
 			BodyJsonBin = list_to_binary(ResponseBody),
@@ -446,10 +448,10 @@ parse_body(Cfg, Body, Now, TodayData) ->
 			{[], TodayData, []}
 	end.
 	
-parse_count(60001, Count) ->
-	LC = ?b2l(Count),
-	[SCount|_] = string:tokens(LC, " "),
-	?l2b(?i2l(?l2i(SCount)*10000));
+% parse_count(60001, Count) ->
+% 	LC = ?b2l(Count),
+% 	[SCount|_] = string:tokens(LC, " "),
+% 	?l2b(?i2l(?l2i(SCount)*10000));
 parse_count(_, Count) ->
 	case is_integer(Count) of
 		true ->
@@ -462,8 +464,8 @@ parse_count(_, Count) ->
 
 build_link_a(_SourceId, LinkA) when is_integer(LinkA) ->
 	?l2b(?i2l(LinkA));
-build_link_a(SourceId, LinkA)  when SourceId=:=10003 orelse SourceId =:= 110001->
-	util:fbin(<<"~s~s"/utf8>>, [LinkA, <<"%2523">>]);
+% build_link_a(SourceId, LinkA)  when SourceId=:=10003 orelse SourceId =:= 110001->
+% 	util:fbin(<<"~s~s"/utf8>>, [LinkA, <<"%2523">>]);
 build_link_a(_SourceId, LinkA) ->
 	LinkA.
 
@@ -523,3 +525,114 @@ do_parse_data(Cfg, [OldData|T], News, Now, TodayData, TopL) ->
 					end
 			end
 	end.
+
+check(Cfg=#cfg_news_source{type = 1}) ->
+	test_spider_json(Cfg, util:now());
+check(Cfg=#cfg_news_source{type = 2}) ->
+	test_spider_html(Cfg, util:now());
+check(Cfg=#cfg_news_source{type = 3}) ->
+	test_spider_rss(Cfg, util:now());
+check(Cfg=#cfg_news_source{type = 4}) ->
+	test_spider_html_json(Cfg, util:now()).
+	
+test_spider_json(Cfg=#cfg_news_source{source_id=SourceId, url = Url,head=Head}, Now) ->
+	NUrl = get_send_url(SourceId, Url, Now),
+	% ?INFO("xxxxxxxxxxxxxxxNUrl ~w",[NUrl]),
+    case ibrowse:send_req(NUrl, Head++[{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+		{ok, "200", _ResponseHeaders, ResponseBody} ->
+			BodyJsonBin = list_to_binary(ResponseBody),
+			BodyTerm = jsx:decode(BodyJsonBin),
+			{NNews, _NTodayData, _NewHotList} = parse_body(Cfg, BodyTerm, Now, []),
+			NData = [[{title, Title},{url, CUrl}] || #todayhot_news{title = Title, url = CUrl} <- NNews],
+			% ?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
+			NData;
+		_Err ->
+			?ERR("Url ~ts fail ~w", [NUrl, _Err]),
+			[]
+	end.
+
+test_spider_rss(Cfg=#cfg_news_source{url = Url, is_top = IsTop}, Now) ->
+		case ibrowse:send_req(?b2l(Url), [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+			{ok, "200", _ResponseHeaders, Body} ->
+				{XmlDoc, _B} = xmerl_scan:string(Body),
+				Items = xmerl_xpath:string("/rss/channel/item",XmlDoc),  
+				{NNews, _NewHotList, _NTodayData} =  lists:foldl(fun(Item, {AccNews, AccTop, AccToday})->  
+									[#xmlText{value=CTitle}] = xmerl_xpath:string("/item/title/text()",Item), 
+									Title = ?c2b(CTitle), 
+									TNews = new_add_rss(Cfg, Item, Now),
+									case IsTop =:= ?true of
+										true ->
+											case lists:member(Title, AccToday) of
+												false -> %% 
+													{[TNews|AccNews], [TNews|AccTop], [Title|AccToday]};
+												_ ->
+													{AccNews, [TNews|AccTop], AccToday}
+											end;
+										_ ->
+											case lists:member(Title, AccToday) of
+												false -> %% 
+													{[TNews|AccNews], AccTop, [Title|AccToday]};
+												_ ->
+													{AccNews, AccTop, AccToday}
+											end
+									end
+							 end,  {[], [], []}, Items),  
+				NData = [[{title, NTitle},{url, NUrl}] || #todayhot_news{title = NTitle, url = NUrl} <- NNews],
+				% ?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
+				NData;
+			_Err ->
+				?ERR("Url ~ts fail ~w", [Url, _Err]),
+				[]
+		end.
+	
+test_spider_html(Cfg=#cfg_news_source{url = Url, head = Head}, Now) ->
+		case ibrowse:send_req(?b2l(Url), Head++[{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+			{ok, "200", _ResponseHeaders, Body} ->
+				#cfg_news_source{data=Data, container=ContainerF, title=TitleF, link_a=LinkA,
+				desc=DescF, author=AuthorF, img=ImgF, count=CountF, time=TimeF} = Cfg,
+				{_, Container} = ?IF(Data=:=<<"">>, {ok, Body}, re:run(Body, Data, [{capture, first, binary}, global])),
+				{_, Item} = ?IF(ContainerF=:=<<"">>, {ok, Container}, re:run(Container, ContainerF, [{capture, first, binary}, global])),
+				{_, ItemTitleL} = re:run(Item, TitleF, [{capture, all_but_first, binary}, global]),
+				{_, ItemLinkAL} = re:run(Item, LinkA, [{capture, all_but_first, binary}, global]),
+				ItemDescL = get_html_data(DescF, Item),
+				ItemAuthorFL = get_html_data(AuthorF, Item),
+				ItemImgFL = get_html_data(ImgF, Item),
+				ItemCountFL = get_html_data(CountF, Item),
+				ItemTimeFL = get_html_data(TimeF, Item),
+				% ?INFO("ItemLinkAL~w",[ItemLinkAL]),
+				{NNews, _NTodayData, _NewHotList} = do_parse_html(Cfg, [], [], [], Now, ItemTitleL, ItemLinkAL, ItemDescL, ItemAuthorFL, ItemImgFL, ItemCountFL, ItemTimeFL),
+				% ?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
+				NData = [[{title, NTitle},{url, NUrl}] || #todayhot_news{title = NTitle, url = NUrl} <- NNews],
+				% ?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
+				NData;
+			_Err ->
+				?ERR("Url ~ts fail ~w", [Url, _Err]),
+				[]
+		end.
+	
+test_spider_html_json(Cfg=#cfg_news_source{source_id=SourceId, url = Url, json_data=DataF, head=Head}, Now) ->
+		NUrl = get_send_url(SourceId, Url, Now),
+		case ibrowse:send_req(NUrl, Head++[{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
+			{ok, "200", _ResponseHeaders, Body} ->
+				?IF(SourceId==110002, ?INFO("Body~w DataF~ts",[length(Body), DataF]), ignored),
+				case catch re:run(Body, DataF, [{capture, first, list}, global, unicode]) of
+					{_, RetJsonStr} ->
+						BodyJsonBin = list_to_binary(RetJsonStr),
+						BodyTerm = jsx:decode(BodyJsonBin),
+						{NNews, _NTodayData, _NewHotList} = parse_body(Cfg, BodyTerm, Now, []),
+						% ?IF(length(NNews)>0, mgr_todayhot:send({up_news, Class, SourceId, NNews, Now}), ignored),
+						% ?IF(NewHotList=/=[], api_todayhot:insert_new_hot(Class, SourceId, lists:reverse(NewHotList)), ignored),
+						% ?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
+						NData = [[{title, NTitle},{url, CUrl}] || #todayhot_news{title = NTitle, url = CUrl} <- NNews],
+						% ?INFO("SourceId~w NNews len ~w", [SourceId, length(NNews)]),
+						NData;
+					_Err ->
+						?ERR("fail ~w", [ _Err]),
+						[]
+				end;
+			_Err ->
+				?ERR("Url ~ts fail ~w", [Url, _Err]),
+				[]
+		end.
+	
+	

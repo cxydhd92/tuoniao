@@ -2,8 +2,64 @@
 
 -include("common.hrl").
 -include("todayhot.hrl").
+-include("cfg_news_source.hrl").
+-include("cfg_news_class.hrl").
+-export([load1/0, load2/0, load3/0, load_sys_id/0, up_news_db/2, up_db_nodes/1, up_hotlist_db/0
+        ,load_cfg_node/0
+        ,load_cfg_class/0
+        ,cfg_class_update/1
+        ,cfg_class_del/1
+        ,cfg_node_update/1
+        ,cfg_node_del/1
+    ]).
 
--export([load1/0, load2/0, load3/0, load_sys_id/0, up_news_db/2, up_db_nodes/1, up_hotlist_db/0]).
+cfg_class_update(#cfg_news_class{id = Id, sort = Sort, name = Name}) ->
+    Sql = <<"REPLACE INTO cfg_todayhot_class(id, sort, name) VALUES (?,?,?) ">>,
+    ok = mysql_poolboy:query(?POOL, Sql, [Id, Sort, Name]),
+    ok.
+
+cfg_class_del(Id) ->
+    Sql = <<"DELETE FROM cfg_todayhot_class where id = ? ">>,
+    ok = mysql_poolboy:query(?POOL, Sql, [Id]),
+    ok.
+
+cfg_node_update(#cfg_news_source{source_id = Id, class = Class, sub_class = SubClass, type = Type, name = Name, summry = Summry, url = Url,url_type = UrlType,
+        is_top = IsTop, link_pre = LinkPre, data = Data, container = Container, title = Title, link_a = LinkeA, 
+        desc = Desc, author =Author, img = Img, count = Count, time = Time, time_type=TimeType, json_data = JsonData, head = Head}) ->
+    Sql = <<"REPLACE INTO cfg_todayhot_node(id, class, sub_class, type, name, summry, url, url_type, is_top, link_pre, data, container, title, link_a,
+     desc0, author, img, count, time, time_type, json_data, head) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?) ">>,
+    ok = mysql_poolboy:query(?POOL, Sql, [Id, Class, SubClass, Type, Name, Summry, Url, UrlType, IsTop, LinkPre, Data, Container, Title, LinkeA, Desc, 
+        Author, Img, Count, Time, TimeType, JsonData, util:term_to_bitstring(Head)]),
+    ok.
+
+cfg_node_del(Id) ->
+    Sql = <<"DELETE FROM cfg_todayhot_node where id = ? ">>,
+    ok = mysql_poolboy:query(?POOL, Sql, [Id]),
+    ok.
+
+load_cfg_node() ->
+    % Now = util:now(),
+    % LimitTime = Now - 90*86400,
+    Sql1 = <<"select id, class, sub_class, type, name, summry, url, url_type, is_top, link_pre, data, container, title, link_a, desc0, author, img, count, time, time_type, json_data, head from cfg_todayhot_node">>,
+    {ok, _, Data1}  = mysql_poolboy:query(?POOL, Sql1),
+    Fun1 = fun([Id, Class, SubClass, Type, Name, Summry, Url, UrlType, IsTop, LinkPre, Data, Container, Title, LinkeA, Desc, 
+        Author, Img, Count, Time, TimeType, JsonData, Head], Acc) ->
+        [#cfg_news_source{source_id = Id, class = Class, sub_class = SubClass, type = Type, name = Name, summry = Summry, url = Url, url_type = UrlType,
+        is_top = IsTop, link_pre = LinkPre, data = Data, container = Container, title = Title, link_a = LinkeA, 
+        desc = Desc, author =Author, img = Img, count = Count, time = Time, time_type=TimeType, json_data = JsonData, head = util:bitstring_to_term(Head)}|Acc]
+    end,
+    lists:foldl(Fun1, [], Data1).
+
+load_cfg_class() ->
+    Sql = <<"select id, sort, name from cfg_todayhot_class ">>,
+    {ok, _, Data} = mysql_poolboy:query(?POOL, Sql),
+    
+    Fun = fun([Id, Sort, Name], Acc) ->
+        [#cfg_news_class{id = Id, name = Name, sort=Sort}|Acc]
+    end,
+    Classs = lists:foldl(Fun, [], Data),
+    Classs.
+
 
 load1() ->
     Sql = <<"select node_id, count, add_time, users from todayhot_node ">>,
@@ -60,7 +116,7 @@ add_news(Acc, Today, [Id, NodeId, Class, Abstract, Title, Url, Source, Count, Su
             {value, TN=#todayhot_node_news{news = NewsL}, RtAcc1} ->
                 News = #todayhot_news{id = Id, node_id = NodeId, class = Class, same_id=SameId, abstract = Abstract, 
                 title = Title, url=Url, count=Count, source=Source, news_time=NewsTime, sub_news=SubNews, time=CTime, img=Img},
-                [TN#todayhot_node_news{news = lists:reverse(lists:keysort(#todayhot_news.id, [News|NewsL]))}|RtAcc1];
+                [TN#todayhot_node_news{news = lists:reverse(lists:keysort(#todayhot_news.id, [News|lists:keydelete(Title, #todayhot_news.title, NewsL)]))}|RtAcc1];
             _ ->
                 News = #todayhot_news{id = Id, node_id = NodeId, class = Class, same_id=SameId, abstract = Abstract, 
                 title = Title, url=Url, count=Count, source=Source, news_time=NewsTime, sub_news=SubNews, time=CTime, img=Img},

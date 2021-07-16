@@ -36,7 +36,7 @@ get_page_news(MinId, ClassId, PageSize, TimeZero, Today) ->
 do_get_page_news(_MinId, _ClassId, _PageSize, TimeZero, _EtsName, NewsL, Loop) when Loop > 1 ->	
 	{NewsL, true, TimeZero};
 do_get_page_news(MinId, ClassId, PageSize, TimeZero, EtsName, CNewsL, Loop) ->	
-	Nodes = cfg_news_source:news_source_class(ClassId),
+	Nodes = api_todayhot:news_source_class(ClassId),
 	Fun = fun(NodeId, Acc) ->
 		case ets:lookup(EtsName, {NodeId, TimeZero}) of
 			[#todayhot_node_news{news= NewsL}] ->	Acc ++ NewsL;
@@ -79,9 +79,9 @@ do_handle(PostVals, Req) ->
 			{NNewsL, NNId} = case PageNewsL of
 				[#todayhot_news{id=NId}|_] ->
 					Fun  = fun(#todayhot_news{id=Id, node_id = NodeId, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
-						#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
+						#cfg_news_source{name=NodeName} = api_todayhot:get_node(NodeId),
 						IsRss = ?IF(lists:member(NodeId, Ids), ?true, ?false),
-						[[{id, Id},{node_id, NodeId}, {is_rss, IsRss}, {node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+						[[{id, Id},{node_id, NodeId}, {is_rss, IsRss}, {node_name, NodeName},{abstract, Abs}, {title, Title}, {url,Url}, {source, Source}, {img, <<"">>}, {time, Time}]|Acc]
 					end,
 					{lists:foldl(Fun, [], PageNewsL), NId};
 				_ ->

@@ -21,12 +21,11 @@ init(Req0, State) ->
 
 handle_get(_, Req) ->
 	Ids = api_user:user_rss_ids(Req),
-	Fun = fun(IClassId, TAcc) ->
-		#cfg_news_class{name = ClassName} = cfg_news_class:get(IClassId),
-		case cfg_news_source:news_source_class(IClassId) of
+	Fun = fun(#cfg_news_class{id=IClassId, name = ClassName}, TAcc) ->
+		case api_todayhot:news_source_class(IClassId) of
 			NodeIds = [_|_] ->
 				Fun1 = fun(NodeId, Acc) ->
-					#cfg_news_source{source_id=SourceId, name = Name, summry=Summry} = cfg_news_source:get(NodeId),
+					#cfg_news_source{source_id=SourceId, name = Name, summry=Summry} = api_todayhot:get_node(NodeId),
 					IsRss = ?IF(lists:member(NodeId, Ids), ?true, ?false),
 					[[{node_id, SourceId},{name, Name}, {is_rss, IsRss}, {desc, Summry}]|Acc]
 				end,
@@ -36,7 +35,7 @@ handle_get(_, Req) ->
 				TAcc
 		end
 	end,
-	ClassL = lists:foldl(Fun, [], cfg_news_class:list_key()),
+	ClassL = lists:foldl(Fun, [], ets:tab2list(?ETS_CFG_CLASS)),
 	Reply = jsx:encode([{data, ClassL}]),
 	Req1 = cowboy_req:set_resp_header(<<"access-control-allow-origin">>, <<$*>>, Req),
     Req2 = cowboy_req:set_resp_header(<<"access-control-allow-methods">>, <<"POST">>, Req1),

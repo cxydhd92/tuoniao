@@ -94,7 +94,7 @@ do_handle(PostVals, Req) ->
 			Today = util:today(),
 			TimeZero1 = ?IF(TimeZero =:= 0, Today, TimeZero), 
 			{PageNewsL, IsDone, NTimeZero} = get_page_news(MinId, ClassId, NodeId, PageSize, TimeZero1, Today),
-			#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
+			#cfg_news_source{name=NodeName} = api_todayhot:get_node(NodeId),
 			{NNewsL, NNId} = case PageNewsL of
 				[#todayhot_news{id=NId}|_] ->
 					Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->

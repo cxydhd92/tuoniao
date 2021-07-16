@@ -30,6 +30,8 @@ routes() ->
      {'_', [
             {"/", todayhot_handler, []}
             ,{"/api/class", todayhot_classid_handler, []}
+            ,{"/api/cfg_node", todayhot_cfg_node_handler, []}
+            ,{"/api/cfg_class", todayhot_cfg_class_handler, []}
             ,{"/api/news", todayhot_news_handler, []}
             ,{"/api/nodes", todayhot_nodeid_handler, []}
             ,{"/api/node/news", todayhot_node_news_handler, []}

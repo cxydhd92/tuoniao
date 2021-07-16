@@ -13,11 +13,10 @@ init(Req0, State) ->
 	{ok, Req1, State}.
 
 handle(<<"GET">>, Req) ->
-	Fun = fun(ClassId, Acc) ->
-				#cfg_news_class{id = ClassId, name = ClassName} = cfg_news_class:get(ClassId),
+	Fun = fun(#cfg_news_class{id = ClassId, name = ClassName}, Acc) ->
 				[[{class_id, ClassId},{class_name, ClassName}]|Acc]
 		end,
-	Datas = lists:foldl(Fun, [], cfg_news_class:list_key()),
+	Datas = lists:foldl(Fun, [], ets:tab2list(?ETS_CFG_CLASS)),
 	Reply = jsx:encode([{data, Datas}]),
 	cowboy_req:reply(200, #{
 		<<"content-type">> => <<"application/json; charset=utf-8">>

@@ -7,6 +7,8 @@
 -define(ETS_TODAYHOT_HOTLIST, todayhot_hot_list_ets). %%当天最新榜单数据
 -define(ETS_TODAYHOT_USER_SESSION, todayhot_use_session_ets). %% 用户session数据
 -define(ETS_TODAYHOT_USER, todayhot_use_ets). %% 用户数据
+-define(ETS_CFG_NODE, ets_cfg_node). %% 节点配置
+-define(ETS_CFG_CLASS, ets_cfg_class). %% 分类配置
 
 -define(REMOVE_CHAR, [$<, $>, $s, $p, $a, $n, $/, $b, $l, $u, $e,$", $c,$l]).
 

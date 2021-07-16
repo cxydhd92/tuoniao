@@ -47,7 +47,7 @@ do_handle(PostVals, Req) ->
 		true when ClassId > 0 andalso NodeId > 0 ->
 			Today = util:today(),
 			NTimeZero = ?IF(TimeZero =:= 0, Today, TimeZero),
-			#cfg_news_source{name = NodeName} = cfg_news_source:get(NodeId),
+			#cfg_news_source{name = NodeName} = api_todayhot:get_node(NodeId),
 			PageNewsL = get_page_news(NodeId, NTimeZero),
 			Fun  = fun(#todayhot_news{id=Id, abstract=Abs, img=Img, time=Time, title=Title, url=Url, source=Source}, {Acc, Rank}) ->
 				NTitle = case Rank of

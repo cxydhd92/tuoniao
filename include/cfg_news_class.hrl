@@ -1,6 +1,6 @@
 -record(cfg_news_class, {
 	'id',
-	'sort',
+	'sort' = 1,
 	'name'
 }).
 

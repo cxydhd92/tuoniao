@@ -8,6 +8,28 @@
 -include_lib("xmerl/include/xmerl.hrl").  
 -compile(export_all).
 
+tz_input(Name, Val) ->
+	case get(tz_info) of
+		Info when is_list(Info) ->
+			put(tz_info, [{Name, Val}|Info]);
+		_ ->
+			put(tz_info, [{Name, Val}])
+	end.
+
+tz_del() ->
+	erase(tz_info).
+
+tz_show() ->
+	case get(tz_info) of
+		Info when is_list(Info) ->
+			TotalVal = lists:sum([Val||{_, Val}<-Info]),
+			?INFO("Total ~w",[TotalVal]),
+			[?INFO("Name:~ts pre ~w%",[Name, Val/TotalVal*100])||{Name, Val}<-lists:reverse(lists:keysort(2, Info))];
+		_ ->
+			nothing
+	end.
+	
+
 test_html(Cfg=#cfg_news_source{class=Class, source_id=SourceId, url = Url}, TodayData, Now) ->
 	case ibrowse:send_req(?b2l(Url), [{"user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"}], get) of
 		{ok, "200", _ResponseHeaders, Body} ->

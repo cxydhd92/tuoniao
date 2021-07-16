@@ -42,7 +42,10 @@ init(Args) ->
             ,create_todayhot_news()
             ,create_todayhot_node_hotlist()
             ,create_todayhot_user()
-            ,create_todayhot_user_session();
+            ,create_todayhot_user_session()
+            ,create_cfg_todayhot_class()
+            ,create_cfg_todayhot_node()
+            ;
         _ ->
             ignored
     end,
@@ -145,7 +148,7 @@ create_todayhot_news() ->
         `class` INT(11) NOT NULL  COMMENT 'class',
         `node_id` INT(11) NOT NULL  COMMENT '节点id',
         `abstract` text NOT NULL COMMENT '新闻摘要',
-        `title` varchar(200) NOT NULL DEFAULT '' COMMENT '新闻标题',
+        `title` varchar(1000) NOT NULL DEFAULT '' COMMENT '新闻标题',
         `url` varchar(500) NOT NULL COMMENT '新闻链接',
         `source` varchar(100) NOT NULL COMMENT '新闻来源',
         `count` varchar(100) NOT NULL COMMENT '新闻热度',
@@ -166,7 +169,7 @@ create_todayhot_node_hotlist() ->
     <<"CREATE TABLE IF NOT EXISTS `todayhot_node_hotlist`(
         `node_id` INT(11) NOT NULL  COMMENT '订阅源节点id',
         `zero` INT(11) NOT NULL  COMMENT '每天零点时间戳',
-        `news` text NOT NULL  COMMENT '榜单数据',
+        `news` longtext NOT NULL  COMMENT '榜单数据',
         PRIMARY KEY ( `node_id`, `zero`)
         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"/utf8
     >>,
@@ -193,6 +196,49 @@ create_todayhot_user_session() ->
         `session` varchar(100) NOT NULL  COMMENT '',
         `time` INT(11) NOT NULL  COMMENT '过期时间',
         PRIMARY KEY ( `account` )
+        )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; "/utf8
+    >>,
+    ok  = mysql_poolboy:query(?POOL, Sql),
+    ok.
+
+create_cfg_todayhot_class() ->
+    Sql = 
+    <<"CREATE TABLE IF NOT EXISTS `cfg_todayhot_class`(
+        `id` INT(11) NOT NULL  COMMENT '订阅源id',
+        `sort`  INT(11) NOT NULL DEFAULT 0  COMMENT '',
+        `name` varchar(50) NOT NULL DEFAULT '' COMMENT '',
+        PRIMARY KEY ( `id` )
+        )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; "/utf8
+    >>,
+    ok  = mysql_poolboy:query(?POOL, Sql),
+    ok.
+
+create_cfg_todayhot_node() ->
+    Sql = 
+    <<"CREATE TABLE IF NOT EXISTS `cfg_todayhot_node`(
+        `id` INT(11) NOT NULL  COMMENT '订阅源id',
+        `class` INT(11) NOT NULL  COMMENT '分类', 
+        `sub_class` INT(11) NOT NULL DEFAULT 1 COMMENT '子分类', 
+        `type` INT(11) NOT NULL DEFAULT 1 COMMENT '子分类', 
+        `is_top` INT(11) NOT NULL  DEFAULT 0 COMMENT '子分类', 
+        `time_type` INT(11) NOT NULL DEFAULT 0  COMMENT '子分类', 
+        `name` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `summry` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `url` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `url_type` INT(11) NOT NULL DEFAULT 0 COMMENT '用户账号', 
+        `link_pre` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `data` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `container` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `title` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `link_a` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `desc0` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `author` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `img` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `count` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `json_data` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
+        `head` varchar(1000) NOT NULL DEFAULT "" COMMENT '',
+        `time` varchar(250) NOT NULL  COMMENT '',
+        PRIMARY KEY ( `id` )
         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; "/utf8
     >>,
     ok  = mysql_poolboy:query(?POOL, Sql),

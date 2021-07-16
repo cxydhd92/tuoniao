@@ -1,5 +1,6 @@
 -module(api_todayhot).
 -include("common.hrl").
+-include("cfg_news_source.hrl").
 -include("todayhot.hrl").
 -export([
 		is_exist/2, get_node/2, get_other_node/2, get_today_node/2, insert_today/1, insert_other/1,  
@@ -9,8 +10,26 @@
 		insert_new_hot/3
 		,get_today_data/0
 		,get_today_node_false/2
+		,get_node/1
+		,news_source_class/1
 ]).
 
+news_source_class(ClassId) ->
+	news_source_class_f1(ets:first(?ETS_CFG_NODE), ClassId, []).
+
+news_source_class_f1('$end_of_table', _ClassId, List) -> List;
+news_source_class_f1(SourceId , ClassId, OldList) ->
+	List = case get_node(SourceId) of
+		#cfg_news_source{class = ClassId} -> [SourceId|OldList];
+		_ -> OldList		
+	end,
+	news_source_class_f1(ets:next(?ETS_CFG_NODE, SourceId), ClassId, List).
+
+get_node(SourceId) ->
+	case ets:lookup(?ETS_CFG_NODE, SourceId) of
+		[Cfg] -> Cfg;
+		_ -> false			
+	end.
 
 insert_new_hot(_Class, NodeId, NewsL) ->
 	Today = util:today(),
@@ -50,30 +69,28 @@ get_node_news_num(NodeId, Zero, Num) ->
 					lists:sublist(News, Num);
 				_ ->
 					SNum = Num - TNum,
-					#todayhot_node_news{news = ONews} = get_other_node(NodeId, Zero-86400),
-					case length(ONews) >= SNum of
-						true ->
-							lists:sublist(ONews, SNum) ++ News;
-						_ ->
-							SSNum = SNum - length(ONews),
-							#todayhot_node_news{news = QONews} = get_other_node(NodeId, Zero-86400-86400),
-							lists:sublist(QONews, SSNum) ++ ONews ++ News
-					end
-					
+					get_node_other_news_num(NodeId, SNum, Zero-86400, News)
 			end;
 		#todayhot_node_news{news = News} ->
 			News;
 		_ -> 
-			#todayhot_node_news{news = ONews} = get_other_node(NodeId, Zero-86400),
-			case length(ONews) >= Num of
-				true ->
-					lists:sublist(ONews, Num);
-				_ ->
-					SSNum = Num - length(ONews),
-					#todayhot_node_news{news = QONews} = get_other_node(NodeId, Zero-86400-86400),
-					lists:sublist(QONews, SSNum) ++ ONews
-			end
+			get_node_other_news_num(NodeId, Num, Zero-86400, [])
     end.
+
+get_node_other_news_num(NodeId, Num, Time, NewsL) when Num > 0 ->
+	case ets:lookup(?ETS_TODAYHOT_NEWS, {NodeId, Time}) of
+		[#todayhot_node_news{news = QONews}] -> 
+			case length(QONews) >= Num of
+				true ->
+					lists:sublist(QONews, Num) ++ NewsL;
+				_ ->
+					SSNum = Num - length(QONews),
+					get_node_other_news_num(NodeId, SSNum, Time - 86400, QONews ++ NewsL)
+			end;
+		_ -> NewsL
+	end;
+get_node_other_news_num(_NodeId, _Num, _Time, NewsL) ->
+	NewsL.
 
 get_node_news(NodeId, Zero) ->
 	EndTime = util:today() - ?LIST_END_TIME,

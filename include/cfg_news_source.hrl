@@ -5,6 +5,7 @@
 	'name',
 	'summry',
 	'url',
+	'url_type' = 0,
 	'type',
 	'is_top',
 	'link_pre',

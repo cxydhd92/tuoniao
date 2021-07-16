@@ -99,7 +99,7 @@ get_rss_list(Account) ->
 
 get_rss_class(SourceList) ->
 	Fun = fun(#todayhot_user_source{id=Id}, Acc) ->
-		case cfg_news_source:get(Id) of
+		case api_todayhot:get_node(Id) of
 			#cfg_news_source{class = Class} ->
 				case lists:keyfind(Class, 1, Acc) of
 					{_, CIds} ->

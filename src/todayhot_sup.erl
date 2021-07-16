@@ -41,6 +41,6 @@ init([]) ->
 
 %% 数据库配置
 parse_db_options()->
-	PoolOptions  = [{size, 20}, {max_overflow, 60}],
+	PoolOptions  = [{size, 5}, {max_overflow, 60}],
     MySqlOptions = [{user, "root"}, {host, "127.0.0.1"}, {password, "123456"}, {database, "hot"}, {keep_alive, true}, {query_timeout, 30000}],
     {PoolOptions, MySqlOptions}.

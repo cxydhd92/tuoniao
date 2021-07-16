@@ -60,15 +60,18 @@ init(_Args) ->
 	?INFO("finish mgr_source",[]),
     {ok, State}.
 
-alloc(State = #mgr_source{total_list = OldList, list = CfgList}) ->
-	Fun = fun(SourceId, {Acc1, Acc2}) ->
-		case lists:member(SourceId, Acc2) of
-			true -> {Acc1, Acc2};
+
+alloc_f1('$end_of_table', List, OldList) -> {List, OldList};
+alloc_f1(SourceId , List, OldList) ->
+	{NList, NOldList} = case lists:member(SourceId, OldList) of
+			true -> {List, OldList};
 			_ ->
-				{alloc(SourceId, Acc1, Acc1), [SourceId|Acc2]}
-		end
+				{alloc(SourceId, List, List), [SourceId|OldList]}
 	end,
-	{NCfgList, NTotalList} = lists:foldl(Fun, {CfgList, OldList}, cfg_news_source:list_key()),
+	alloc_f1(ets:next(?ETS_CFG_NODE, SourceId), NList, NOldList).
+
+alloc(State = #mgr_source{total_list = OldList, list = CfgList}) ->
+	{NCfgList, NTotalList} = alloc_f1(ets:first(?ETS_CFG_NODE), CfgList, OldList),
 	State#mgr_source{total_list = NTotalList, list = NCfgList}.
 
 alloc(SourceId, [], PList) ->

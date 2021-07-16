@@ -122,8 +122,8 @@ do_handle(List, Param, Req) ->
 			{NNewsL, NNId} = case PageNewsL of
 				[#todayhot_news{id=NId}|_] ->
 					Fun  = fun(#todayhot_news{id=Id, node_id = NodeId, abstract=Abs, img=Img, time=Time, title=Title,url=Url, source=Source}, Acc) ->
-						#cfg_news_source{name=NodeName} = cfg_news_source:get(NodeId),
-						[[{id, Id},{node_id, NodeId}, {node_name, NodeName},{abstract, unicode:characters_to_binary(Abs)}, {title, Title}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc]
+						#cfg_news_source{name=NodeName} = api_todayhot:get_node(NodeId),
+						[[{id, Id},{node_id, NodeId}, {node_name, NodeName},{abstract, unicode:characters_to_binary(Abs)}, {title, Title}, {url,Url}, {source, Source}, {img, <<"">>}, {time, Time}]|Acc]
 					end,
 					{lists:foldl(Fun, [], PageNewsL), NId};
 				_ ->
