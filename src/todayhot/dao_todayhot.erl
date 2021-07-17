@@ -25,11 +25,11 @@ cfg_class_del(Id) ->
 
 cfg_node_update(#cfg_news_source{source_id = Id, class = Class, sub_class = SubClass, type = Type, name = Name, summry = Summry, url = Url,url_type = UrlType,
         is_top = IsTop, link_pre = LinkPre, data = Data, container = Container, title = Title, link_a = LinkeA, 
-        desc = Desc, author =Author, img = Img, count = Count, time = Time, time_type=TimeType, json_data = JsonData, head = Head}) ->
+        desc = Desc, author =Author, img = Img, count = Count, time = Time, time_type=TimeType, json_data = JsonData, head = Head, check_num = CheckNum, fake_id = FakeId}) ->
     Sql = <<"REPLACE INTO cfg_todayhot_node(id, class, sub_class, type, name, summry, url, url_type, is_top, link_pre, data, container, title, link_a,
-     desc0, author, img, count, time, time_type, json_data, head) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?) ">>,
+     desc0, author, img, count, time, time_type, json_data, head, check_num, fake_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, ?, ?,?) ">>,
     ok = mysql_poolboy:query(?POOL, Sql, [Id, Class, SubClass, Type, Name, Summry, Url, UrlType, IsTop, LinkPre, Data, Container, Title, LinkeA, Desc, 
-        Author, Img, Count, Time, TimeType, JsonData, util:term_to_bitstring(Head)]),
+        Author, Img, Count, Time, TimeType, JsonData, util:term_to_bitstring(Head), CheckNum, FakeId]),
     ok.
 
 cfg_node_del(Id) ->
@@ -40,13 +40,13 @@ cfg_node_del(Id) ->
 load_cfg_node() ->
     % Now = util:now(),
     % LimitTime = Now - 90*86400,
-    Sql1 = <<"select id, class, sub_class, type, name, summry, url, url_type, is_top, link_pre, data, container, title, link_a, desc0, author, img, count, time, time_type, json_data, head from cfg_todayhot_node">>,
+    Sql1 = <<"select id, class, sub_class, type, name, summry, url, url_type, is_top, link_pre, data, container, title, link_a, desc0, author, img, count, time, time_type, json_data, head, check_num, fake_id from cfg_todayhot_node">>,
     {ok, _, Data1}  = mysql_poolboy:query(?POOL, Sql1),
     Fun1 = fun([Id, Class, SubClass, Type, Name, Summry, Url, UrlType, IsTop, LinkPre, Data, Container, Title, LinkeA, Desc, 
-        Author, Img, Count, Time, TimeType, JsonData, Head], Acc) ->
+        Author, Img, Count, Time, TimeType, JsonData, Head, CheckNum, FakeId], Acc) ->
         [#cfg_news_source{source_id = Id, class = Class, sub_class = SubClass, type = Type, name = Name, summry = Summry, url = Url, url_type = UrlType,
         is_top = IsTop, link_pre = LinkPre, data = Data, container = Container, title = Title, link_a = LinkeA, 
-        desc = Desc, author =Author, img = Img, count = Count, time = Time, time_type=TimeType, json_data = JsonData, head = util:bitstring_to_term(Head)}|Acc]
+        desc = Desc, author =Author, img = Img, count = Count, time = Time, time_type=TimeType, json_data = JsonData, head = util:bitstring_to_term(Head), check_num = CheckNum, fake_id = FakeId}|Acc]
     end,
     lists:foldl(Fun1, [], Data1).
 

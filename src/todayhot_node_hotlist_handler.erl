@@ -56,7 +56,7 @@ do_handle(PostVals, Req) ->
 					3-> util:fbin(<<"~s~s"/utf8>>, [<<"<font class=\"fwb\" color=\"green\">3. </font>">>, Title]);
 					_ -> util:fbin(<<"~w~s~s"/utf8>>, [Rank, <<". ">>, Title])
 				end,
-				{[[{id, Id},{abstract, unicode:characters_to_binary(Abs)}, {title, NTitle}, {url,Url}, {source, Source}, {img, Img}, {time, Time}]|Acc], Rank-1}
+				{[[{id, Id},{abstract, unicode:characters_to_binary(Abs)}, {title, NTitle}, {url,Url}, {source, Source}, {img, <<>>}, {time, Time}]|Acc], Rank-1}
 			end,
 			{NNewsL, _} = lists:foldl(Fun, {[], length(PageNewsL)}, PageNewsL),
 			% Data = [{data, NNewsL}],

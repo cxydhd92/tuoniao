@@ -236,8 +236,10 @@ create_cfg_todayhot_node() ->
         `img` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
         `count` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
         `json_data` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
-        `head` varchar(1000) NOT NULL DEFAULT "" COMMENT '',
+        `head` text NOT NULL COMMENT '',
+        `check_num` INT(11) NOT NULL DEFAULT 50  COMMENT '子分类', 
         `time` varchar(250) NOT NULL  COMMENT '',
+        `fake_id` varchar(250) NOT NULL DEFAULT "" COMMENT '用户账号', 
         PRIMARY KEY ( `id` )
         )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4; "/utf8
     >>,

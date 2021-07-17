@@ -124,7 +124,8 @@ handle_init([{MgrPid, SourceId, IsUser}]) ->
 	% Sec = Today+86400 - util:now(),
 	% erlang:send_after(Sec*1000*3, self(), zero_up),
 	% #cfg_news_source{class = Class} = api_todayhot:get_node(SourceId),
-	News = api_todayhot:get_node_news_num(SourceId, Today, 100),
+	#cfg_news_source{check_num = CheckNum} = api_todayhot:get_node(SourceId),
+	News = api_todayhot:get_node_news_num(SourceId, Today, CheckNum),
 	TitleL = [Title||#todayhot_news{title=Title}<-News],
 	% gc_timer(),
 	?INFO("SourceId~w titlelen ~w end",[SourceId, length(TitleL)]),
@@ -143,7 +144,8 @@ do_handle_cast(_Msg, State)->
 do_handle_info({add_source, SourceId, IsUser}, State=#source{list = List, titles = ATitleL}) ->
 	NList = [{SourceId, IsUser}|lists:keydelete(SourceId, 1, List)],
 	Today = util:today(),
-	News = api_todayhot:get_node_news_num(SourceId, Today, 100),
+	#cfg_news_source{check_num = CheckNum} = api_todayhot:get_node(SourceId),
+	News = api_todayhot:get_node_news_num(SourceId, Today, CheckNum),
 	TitleL = [Title||#todayhot_news{title=Title}<-News],
 	?INFO("add_source SourceId~w titlelen ~w end",[SourceId, length(TitleL)]),
 	{noreply, State#source{list = NList, titles = [{SourceId, TitleL}|lists:keydelete(SourceId, 1, ATitleL)]}};
@@ -169,7 +171,8 @@ start_spider([{SourceId, IsUser}|List], TodayData, Now) ->
 		_ ->
 			start_spider_f1([], SourceId, IsUser, Now)
 	end,
-	NTodayData = [{SourceId, lists:sublist(NSubTodayData,100)}|lists:keydelete(SourceId, 1, TodayData)],
+	#cfg_news_source{check_num = CheckNum} = api_todayhot:get_node(SourceId),
+	NTodayData = [{SourceId, lists:sublist(NSubTodayData,CheckNum)}|lists:keydelete(SourceId, 1, TodayData)],
 	erlang:garbage_collect(),
 	start_spider(List, NTodayData, Now).
 
